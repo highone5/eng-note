@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eng note</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link id="font-link" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Nanum+Gothic:wght@400;700&family=Binggrae:wght@400;700&family=Cafe24Anemone&display=swap" rel="stylesheet">
+    
+    <style>
+      :root {
+    --primary-color: #ff6f61;
+    --bg-color: #f9f8f6;
+    --card-bg: #ffffff;
+    --text-main: #333333;
+    --text-sub: #888888;
+   /* 한국어는 Noto Sans KR, 영어는 고정폭(monospace)을 우선하도록 설정 */
+    --app-font: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --english-font: "Courier New", Courier, monospace;
+}
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--app-font); }
+        body { background-color: #f5f5f5; color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; }
+        
+        .app-container { width: 100%; max-width: 500px; background: var(--bg-color); min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,0,0,0.05); padding-bottom: 90px; }
+        
+        /* 헤더 디자인 (note 브랜드 정체성 유지) */
+        header { padding: 20px; text-align: left; background: #fff; font-size: 24px; font-weight: bold; letter-spacing: 1px; cursor: pointer; border-bottom: 1px solid #f0f0f0; }
+        header span { color: var(--primary-color); }
+        
+        /* 탭 화면 제어 */
+        .tab-content { display: none; padding: 20px; flex: 1; }
+        .tab-content.active { display: block; }
+        
+        /* 상단 대시보드 필터 멀티 카드 (전체 / 오늘 / 즐겨찾기) */
+        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .dash-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 16px; padding: 12px 5px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
+        .dash-card.active { border-color: var(--primary-color); background: #fffbfb; }
+        .dash-card i { font-size: 18px; color: var(--text-sub); margin-bottom: 6px; display: block; }
+        .dash-card.active i { color: var(--primary-color); }
+        .dash-card .count { display: inline-block; background: var(--primary-color); color: white; padding: 1px 8px; border-radius: 10px; font-size: 11px; margin-top: 4px; font-weight: bold; }
+        
+        /* 검색창 디자인 */
+        .search-box { position: relative; margin-bottom: 20px; }
+        .search-box input { width: 100%; padding: 12px 15px 12px 42px; border: 1px solid #e0e0e0; border-radius: 25px; font-size: 14px; background: #fff; outline: none; }
+        .search-box i { position: absolute; left: 16px; top: 15px; color: var(--text-sub); font-size: 15px; }
+        
+        /* 문장 카드 스타일 정밀화 */
+        .word-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 24px; padding: 22px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); position: relative; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .category-tag { background: #fff0ee; color: var(--primary-color); padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .card-actions { display: flex; gap: 15px; color: var(--text-sub); cursor: pointer; font-size: 18px; align-items: center; }
+        .card-actions i.fa-star.active { color: #ffca28; }
+        .card-actions i:hover { color: var(--primary-color); }
+        .korean-txt { font-size: 19px; font-weight: bold; margin-bottom: 10px; line-height: 1.4; }
+        
+        /* 영어 문장 볼드(Bold) 적용 및 블러 스타일 */
+        .english-blur-box { font-size: 17px; color: var(--primary-color); font-weight: bold; font-family: monospace; margin-bottom: 12px; line-height: 1.4; cursor: pointer; transition: filter 0.2s ease; display: block; }
+        .english-blur-box.blurred { filter: blur(5px); user-select: none; }
+        
+        /* 연결 문장 리스트 디자인 내 중복 명칭 제거 버전 */
+        .link-section { border-top: 1px dashed #eee; padding-top: 12px; margin-top: 12px; }
+        .link-item { background: #fafafa; border: 1px solid #f0f0f0; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .link-item .en-txt { font-weight: bold; font-size: 14px; color: var(--primary-color); font-family: monospace; }
+        
+        /* 하단 컴팩트 문장 추가 버튼 */
+        .add-link-btn { color: var(--text-sub); font-size: 12px; cursor: pointer; font-weight: 500; display: inline-block; margin-top: 5px; transition: color 0.2s; }
+        .add-link-btn:hover { color: var(--primary-color); }
+        
+        /* 하단 앱 네비게이션 바 */
+        nav { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 12px 0; z-index: 10; }
+        .nav-item { text-align: center; color: var(--text-sub); cursor: pointer; font-size: 12px; flex: 1; }
+        .nav-item.active { color: var(--primary-color); }
+        .nav-item i { font-size: 22px; margin-bottom: 4px; display: block; }
+        
+        /* 플로팅 액션 우측 버튼 (+) */
+        .fab { position: absolute; right: 20px; bottom: 90px; width: 56px; height: 56px; background: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 5; transition: transform 0.1s; }
+        .fab:active { transform: scale(0.95); }
+        
+        /* 공용 바텀시트 모달 팝업 구조 */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: flex-end; z-index: 100; }
+        .modal-content { background: white; width: 100%; max-width: 500px; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 30px 20px; animation: slideUp 0.25s ease-out; max-height: 85vh; overflow-y: auto; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #555; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #e0e0e0; border-radius: 12px; background: #fafafa; font-size: 15px; outline: none; }
+        .form-group input:focus { border-color: var(--primary-color); }
+        
+        .modal-btns { display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
+        .btn { flex: 1; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: bold; border: none; cursor: pointer; text-align: center; min-width: 80px; }
+        .btn-cancel { background: #f5f5f5; color: #666; }
+        .btn-submit { background: var(--primary-color); color: white; }
+        .btn-danger { background: #fff0ee; color: red; }
+
+        /* 플래시카드 인라인 상단 기능바 디자인 */
+        .fc-top-bar { display: flex; gap: 10px; margin-bottom: 15px; }
+        .fc-ctrl-btn { flex: 1; padding: 10px; border: 1px solid #e0e0e0; background: #fff; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; color: #555; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .fc-ctrl-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+        /* 플래시카드 메인 영역 */
+        .flashcard-area { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 360px; background: #fff; border: 1px solid #e8e8e8; border-radius: 28px; margin-bottom: 20px; cursor: pointer; padding: 30px; text-align: center; position: relative; box-shadow: 0 6px 15px rgba(0,0,0,0.02); user-select: none; transition: transform 0.2s; }
+        .flashcard-action-btns { display: flex; justify-content: center; gap: 20px; width: 100%; }
+        
+        .circle-btn { width: 55px; height: 55px; border-radius: 50%; border: 1px solid #e0e0e0; background: white; display: flex; justify-content: center; align-items: center; font-size: 20px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.04); transition: transform 0.1s; }
+        .circle-btn:active { transform: scale(0.95); }
+        .circle-btn.btn-x { border-color: #ff5252; color: #ff5252; }
+        .circle-btn.btn-v { border-color: #4caf50; color: #4caf50; }
+        .circle-btn.btn-audio { border-color: #2196f3; color: #2196f3; }
+        .circle-btn.btn-edit { border-color: #757575; color: #757575; }
+
+        /* 결과 창 패널 스타일 */
+        .result-panel { text-align: center; padding: 20px 10px; }
+        .result-score { font-size: 48px; font-weight: bold; color: var(--primary-color); margin: 15px 0; }
+
+        /* 설정 탭 색상 및 폰트 변경 구역 */
+        .settings-section { background: #fff; border: 1px solid #e8e8e8; border-radius: 24px; padding: 22px; margin-bottom: 20px; }
+        .settings-section h3 { font-size: 15px; color: #444; margin-bottom: 15px; font-weight: bold; }
+        .color-picker { display: flex; gap: 15px; margin-top: 12px; }
+        .color-dot { width: 38px; height: 38px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.2s; }
+        .color-dot.active { border-color: #333; transform: scale(1.1); }
+        .color-name { font-size: 11px; color: var(--text-sub); text-align: center; margin-top: 4px; display: block; }
+.english-blur-box, .en-txt {
+        font-family: var(--english-font) !important;
+}
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header id="app-logo">ENG <span>ZIP</span></header>
+
+    <div id="tab-home" class="tab-content active">
+        <div class="dashboard">
+            <div class="dash-card active" id="filter-all"><i class="fa-solid fa-border-all"></i>전체<br><span class="count" id="count-all">0</span></div>
+            <div class="dash-card" id="filter-today"><i class="fa-solid fa-calendar-day"></i>오늘<br><span class="count" id="count-today">0</span></div>
+            <div class="dash-card" id="filter-star"><i class="fa-solid fa-star" style="color:#ffca28;"></i>즐겨찾기<br><span class="count" id="count-star">0</span></div>
+        </div>
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search-input" placeholder="영어 단어나 한국어로 검색...">
+        </div>
+        <div id="word-list-container"></div>
+    </div>
+
+    <div id="tab-flashcard" class="tab-content">
+        <div class="fc-top-bar">
+            <button class="fc-ctrl-btn" id="fc-btn-shuffle"><i class="fa-solid fa-shuffle"></i> 랜덤 섞기</button>
+            <button class="fc-ctrl-btn" id="fc-btn-review-mode"><i class="fa-solid fa-triangle-exclamation"></i> 틀린문장 복습</button>
+        </div>
+        
+        <div class="flashcard-area" id="flashcard-box">
+            <span class="category-tag" style="position: absolute; top: 20px; left: 20px;" id="fc-category">일상</span>
+            <span style="position: absolute; top: 20px; right: 20px; color: var(--text-sub); font-size: 13px;" id="fc-progress">0 / 0</span>
+            
+            <div id="fc-main-content" style="width:100%;">
+                <h2 id="fc-korean" style="font-size: 22px; word-break: keep-all; margin-bottom: 15px; padding: 0 10px;">저장된 문장이 없습니다.</h2>
+                <h3 id="fc-english" style="font-size: 19px; color: var(--primary-color); font-weight: bold; font-family: monospace; display: none; padding: 0 10px; word-break: break-all;"></h3>
+            </div>
+        </div>
+        
+        <div class="flashcard-action-btns" id="fc-actions">
+            <button class="circle-btn btn-x" id="fc-btn-x"><i class="fa-solid fa-xmark"></i></button>
+            <button class="circle-btn btn-audio" id="fc-btn-audio"><i class="fa-solid fa-volume-high"></i></button>
+            <button class="circle-btn btn-v" id="fc-btn-v"><i class="fa-solid fa-check"></i></button>
+            <button class="circle-btn btn-edit" id="fc-btn-edit"><i class="fa-solid fa-pen"></i></button>
+        </div>
+    </div>
+
+    <div id="tab-setting" class="tab-content">
+        <div class="settings-section">
+            <h3>어플 테마 색상 변경</h3>
+            <div class="color-picker">
+                <div><div class="color-dot" style="background: #ff6f61;" data-color="#ff6f61"></div><span class="color-name">오렌지</span></div>
+                <div><div class="color-dot" style="background: #4f46e5;" data-color="#4f46e5"></div><span class="color-name">인디고</span></div>
+                <div><div class="color-dot" style="background: #f59e0b;" data-color="#f59e0b"></div><span class="color-name">선셋골드</span></div>
+                <div><div class="color-dot" style="background: #10b981;" data-color="#10b981"></div><span class="color-name">포레스트</span></div>
+                <div><div class="color-dot" style="background: #1e293b;" data-color="#1e293b"></div><span class="color-name">네이비</span></div>
+            </div>
+        </div>
+        <div class="settings-section">
+            <h3>데이터 동기화 관리</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div><strong>클라우드 데이터베이스 상태</strong><br><span style="font-size:12px; color:var(--text-sub);">Firebase Firestore 실시간 연결됨</span></div>
+                <span style="color: #4caf50; font-size: 14px; font-weight: bold;"><i class="fa-solid fa-circle-check"></i> 정상</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="fab" id="open-add-modal"><i class="fa-solid fa-plus"></i></div>
+
+    <div class="modal" id="add-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">새 문장 추가</h3>
+            <div class="form-group">
+                <label>한국어 문장</label>
+                <input type="text" id="input-korean" placeholder="한국어 문장을 입력하세요">
+            </div>
+            <div class="form-group">
+                <label>영어 문장</label>
+                <input type="text" id="input-english" placeholder="English sentence here">
+            </div>
+            <div class="form-group">
+                <label>메모 (선택)</label>
+                <input type="text" id="input-memo" placeholder="예: 격식체, 비즈니스용...">
+            </div>
+            <div class="form-group">
+                <label>카테고리</label>
+                <select id="input-category">
+                    <option value="일상">일상</option>
+                    <option value="여행">여행</option>
+                    <option value="업무">업무</option>
+                </select>
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-cancel" id="close-add-modal">취소</button>
+                <button class="btn btn-submit" id="btn-save-word">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="edit-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">문장 관리</h3>
+            <input type="hidden" id="edit-word-id">
+            <div class="form-group">
+                <label>한국어 문장</label>
+                <input type="text" id="edit-korean">
+            </div>
+            <div class="form-group">
+                <label>영어 문장</label>
+                <input type="text" id="edit-english">
+            </div>
+            <div class="form-group">
+                <label>메모</label>
+                <input type="text" id="edit-memo">
+            </div>
+            <div class="form-group">
+                <label>카테고리</label>
+                <select id="edit-category">
+                    <option value="일상">일상</option>
+                    <option value="여행">여행</option>
+                    <option value="업무">업무</option>
+                </select>
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-submit" id="btn-edit-submit">수정</button>
+                <button class="btn btn-danger" id="btn-edit-delete">삭제</button>
+                <button class="btn btn-cancel" id="close-edit-modal">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="link-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">문장 추가</h3>
+            <input type="hidden" id="link-parent-id">
+            <div class="form-group">
+                <label>한국어 문장</label>
+                <input type="text" id="link-korean" placeholder="대응되는 한국어 문장">
+            </div>
+            <div class="form-group">
+                <label>영어 문장</label>
+                <input type="text" id="link-english" placeholder="대응되는 영어 문장">
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-cancel" id="close-link-modal">취소</button>
+                <button class="btn btn-submit" id="btn-save-link">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav-item active" data-tab="tab-home"><i class="fa-solid fa-house"></i>홈</div>
+        <div class="nav-item" data-tab="tab-flashcard"><i class="fa-solid fa-id-card"></i>플래시카드</div>
+        <div class="nav-item" data-tab="tab-setting"><i class="fa-solid fa-gear"></i>설정</div>
+    </nav>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, deleteDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Firebase 연동 설정 유지
+    const firebaseConfig = {
+        apiKey: "AIzaSyCO9TRqm_zWgt8AhP502k_H8F1whO2e9hU",
+        authDomain: "english-note-9e5c0.firebaseapp.com",
+        projectId: "english-note-9e5c0",
+        storageBucket: "english-note-9e5c0.firebasestorage.app",
+        messagingSenderId: "690879897026",
+        appId: "1:690879897026:web:75441f4d933a1f66578a5b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const wordsCollection = collection(db, "words");
+
+    let allWords = []; 
+    let flashcardPool = []; 
+    let currentFlashIndex = 0;
+    let isCardRevealed = false; 
+    let currentFilter = 'all'; 
+
+    // 오답 저장을 위한 통계 배열 변수
+    let scoreVCount = 0;
+    let scoreXCount = 0;
+    let wrongWordsIds = []; 
+    let isReviewModeActive = false;
+
+    // --- 시스템 초기화 세팅 (테마 컬러 및 폰트 불러오기) ---
+    const savedColor = localStorage.getItem('eng-note-theme-color') || '#ff6f61';
+    document.documentElement.style.setProperty('--primary-color', savedColor);
+    document.querySelectorAll('.color-dot').forEach(dot => {
+        if(dot.getAttribute('data-color') === savedColor) dot.classList.add('active');
+        dot.addEventListener('click', () => {
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+            dot.classList.add('active');
+            const targetColor = dot.getAttribute('data-color');
+            document.documentElement.style.setProperty('--primary-color', targetColor);
+            localStorage.setItem('eng-note-theme-color', targetColor);
+        });
+    });
+
+
+    // 헤더 타이틀 클릭 시 리스트 복구 및 리셋
+    document.getElementById('app-logo').addEventListener('click', () => {
+        document.getElementById('search-input').value = '';
+        currentFilter = 'all';
+        setActiveFilterCard('filter-all');
+        switchTab('tab-home');
+        renderWordList(allWords);
+    });
+
+    // 탭 화면 전환 라우터 제어
+    function switchTab(tabId) {
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        
+        const activeNav = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+        if(activeNav) activeNav.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+
+        const fab = document.getElementById('open-add-modal');
+        if(tabId === 'tab-flashcard') {
+            fab.style.display = 'none';
+            isReviewModeActive = false;
+            document.getElementById('fc-btn-review-mode').classList.remove('active');
+            initFlashcard(allWords);
+        } else if(tabId === 'tab-home') {
+            fab.style.display = 'flex';
+        } else {
+            fab.style.display = 'none';
+        }
+    }
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => switchTab(item.getAttribute('data-tab')));
+    });
+
+    // 모달 레이어 바인딩 제어
+    const addModal = document.getElementById('add-modal');
+    document.getElementById('open-add-modal').addEventListener('click', () => addModal.style.display = 'flex');
+    document.getElementById('close-add-modal').addEventListener('click', () => addModal.style.display = 'none');
+    
+    const editModal = document.getElementById('edit-modal');
+    document.getElementById('close-edit-modal').addEventListener('click', () => editModal.style.display = 'none');
+
+    const linkModal = document.getElementById('link-modal');
+    document.getElementById('close-link-modal').addEventListener('click', () => linkModal.style.display = 'none');
+
+    // TTS 음성 출력 엔진
+    function speak(text) {
+        if (!window.speechSynthesis) return;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        window.speechSynthesis.speak(utterance);
+    }
+
+    // 파이어베이스 데이터 실시간 동기화 파이프라인
+    const q = query(wordsCollection, orderBy("createdAt", "desc"));
+    onSnapshot(q, (snapshot) => {
+        allWords = [];
+        snapshot.forEach((doc) => {
+            allWords.push({ id: doc.id, ...doc.data() });
+        });
+        updateDashboardCount(allWords);
+        applyFilter();
+    });
+
+    // 상단 3단 대시보드 카운팅 최적화 적용
+    function updateDashboardCount(words) {
+        document.getElementById('count-all').innerText = words.length;
+        const todayStr = new Date().toDateString();
+        const todayCount = words.filter(w => {
+            if(!w.createdAt) return false;
+            const d = w.createdAt.toDate ? w.createdAt.toDate() : new Date(w.createdAt);
+            return d.toDateString() === todayStr;
+        }).length;
+        document.getElementById('count-today').innerText = todayCount;
+        
+        const starCount = words.filter(w => w.starred === true).length;
+        document.getElementById('count-star').innerText = starCount;
+    }
+
+    // 대시보드 카드 필터 클릭 이벤트 매핑
+    function setActiveFilterCard(id) {
+        document.querySelectorAll('.dash-card').forEach(c => c.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    document.getElementById('filter-all').addEventListener('click', () => { currentFilter = 'all'; setActiveFilterCard('filter-all'); applyFilter(); });
+    document.getElementById('filter-today').addEventListener('click', () => { currentFilter = 'today'; setActiveFilterCard('filter-today'); applyFilter(); });
+    document.getElementById('filter-star').addEventListener('click', () => { currentFilter = 'star'; setActiveFilterCard('filter-star'); applyFilter(); });
+
+    function applyFilter() {
+        let filtered = [...allWords];
+        if(currentFilter === 'today') {
+            const todayStr = new Date().toDateString();
+            filtered = allWords.filter(w => {
+                if(!w.createdAt) return false;
+                const d = w.createdAt.toDate ? w.createdAt.toDate() : new Date(w.createdAt);
+                return d.toDateString() === todayStr;
+            });
+        } else if(currentFilter === 'star') {
+            filtered = allWords.filter(w => w.starred === true);
+        }
+        renderWordList(filtered);
+    }
+
+    // --- 메인 화면 리스트 렌더링 (영어 볼드 및 구조 최적화) ---
+    function renderWordList(words) {
+        const container = document.getElementById('word-list-container');
+        container.innerHTML = '';
+
+        if(words.length === 0) {
+            container.innerHTML = `<p style="text-align:center; color:var(--text-sub); margin-top:40px; font-size:14px;">조건에 맞는 문장이 없습니다.</p>`;
+            return;
+        }
+
+        words.forEach(word => {
+            const card = document.createElement('div');
+            card.className = 'word-card';
+            
+            let linksHtml = '';
+            if(word.links && word.links.length > 0) {
+                linksHtml = `<div class="link-section">`; // 중복 문구 완벽 삭제 완료
+                word.links.forEach(link => {
+                    linksHtml += `
+                        <div class="link-item">
+                            <div>
+                                <strong style="font-size:15px; display:block; margin-bottom:2px;">${link.korean}</strong>
+                                <span class="en-txt">${link.english}</span>
+                            </div>
+                            <i class="fa-solid fa-volume-high" style="color:var(--text-sub); cursor:pointer; font-size:16px;" id="link-audio-${word.id}-${link.createdAt}"></i>
+                        </div>`;
+                });
+                linksHtml += `</div>`;
+            }
+
+            const isStarred = word.starred === true;
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <span class="category-tag">${word.category || '일상'}</span>
+                    <div class="card-actions">
+                        <i class="fa-star ${isStarred ? 'fa-solid active' : 'fa-regular'}" id="star-${word.id}"></i>
+                        <i class="fa-solid fa-volume-high" id="audio-${word.id}"></i>
+                        <i class="fa-solid fa-ellipsis" id="menu-${word.id}"></i>
+                    </div>
+                </div>
+                <div class="korean-txt">${word.korean}</div>
+                <div>
+                    <div class="english-blur-box blurred" id="en-box-${word.id}">${word.english}</div>
+                </div>
+                <div style="font-size:13px; color:var(--text-sub); margin-bottom:5px;">${word.memo ? '💡 ' + word.memo : ''}</div>
+                ${linksHtml}
+                <div class="add-link-btn" id="add-link-${word.id}"><i class="fa-solid fa-link"></i> + 문장 추가</div>
+            `;
+
+            container.appendChild(card);
+
+            // 컴팩트 버튼 폰트 스타일 인라인 추가 조절
+            const addLinkBtn = card.querySelector(`#add-link-${word.id}`);
+            addLinkBtn.style.fontSize = "12px";
+            addLinkBtn.style.color = "var(--text-sub)";
+
+            // 영어 블러 토글 바인딩
+            const enBox = card.querySelector(`#en-box-${word.id}`);
+            enBox.addEventListener('click', (e) => { e.stopPropagation(); enBox.classList.toggle('blurred'); });
+
+            // 별 아이콘 즐겨찾기 토글 시스템 연동
+            card.querySelector(`#star-${word.id}`).addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await updateDoc(doc(db, "words", word.id), { starred: !isStarred });
+            });
+
+            card.querySelector(`#audio-${word.id}`).addEventListener('click', (e) => { e.stopPropagation(); speak(word.english); });
+            card.querySelector(`#menu-${word.id}`).addEventListener('click', (e) => { e.stopPropagation(); openEditModal(word); });
+
+            if(word.links && word.links.length > 0) {
+                word.links.forEach(link => {
+                    const btn = card.querySelector(`#link-audio-${word.id}-${link.createdAt}`);
+                    if(btn) btn.addEventListener('click', (e) => { e.stopPropagation(); speak(link.english); });
+                });
+            }
+
+            addLinkBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('link-parent-id').value = word.id;
+                document.getElementById('link-korean').value = '';
+                document.getElementById('link-english').value = '';
+                linkModal.style.display = 'flex';
+            });
+        });
+    }
+
+    // 편집 오픈 시스템 모달 세팅
+    function openEditModal(word) {
+        document.getElementById('edit-word-id').value = word.id;
+        document.getElementById('edit-korean').value = word.korean;
+        document.getElementById('edit-english').value = word.english;
+        document.getElementById('edit-memo').value = word.memo || '';
+        document.getElementById('edit-category').value = word.category || '일상';
+        editModal.style.display = 'flex';
+    }
+
+    document.getElementById('btn-edit-submit').addEventListener('click', async () => {
+        const id = document.getElementById('edit-word-id').value;
+        const uKorean = document.getElementById('edit-korean').value.trim();
+        const uEnglish = document.getElementById('edit-english').value.trim();
+        const uMemo = document.getElementById('edit-memo').value.trim();
+        const uCategory = document.getElementById('edit-category').value;
+
+        if(!uKorean || !uEnglish) return alert("내용을 채워주세요.");
+        await updateDoc(doc(db, "words", id), { korean: uKorean, english: uEnglish, memo: uMemo, category: uCategory });
+        editModal.style.display = 'none';
+    });
+
+    document.getElementById('btn-edit-delete').addEventListener('click', async () => {
+        const id = document.getElementById('edit-word-id').value;
+        if(confirm("이 문장을 완전히 삭제할까요?")) {
+            await deleteDoc(doc(db, "words", id));
+            editModal.style.display = 'none';
+        }
+    });
+
+    // --- 1) 새 문장 추가 시 모달이 닫히지 않고 유지되도록 연동 설정 ---
+    document.getElementById('btn-save-word').addEventListener('click', async () => {
+        const korean = document.getElementById('input-korean').value.trim();
+        const english = document.getElementById('input-english').value.trim();
+        const memo = document.getElementById('input-memo').value.trim();
+        const category = document.getElementById('input-category').value;
+
+        if(!korean || !english) return alert("한국어와 영어 문장을 모두 입력해 주세요.");
+
+        await addDoc(wordsCollection, {
+            korean: korean,
+            english: english,
+            memo: memo,
+            category: category,
+            links: [],
+            starred: false,
+            createdAt: new Date()
+        });
+
+        // 입력 폼 필드만 초기화하고 창은 열린 상태로 유지 (연속 입력 지원)
+        document.getElementById('input-korean').value = '';
+        document.getElementById('input-english').value = '';
+        document.getElementById('input-memo').value = '';
+    });
+
+    document.getElementById('btn-save-link').addEventListener('click', async () => {
+        const parentId = document.getElementById('link-parent-id').value;
+        const lKorean = document.getElementById('link-korean').value.trim();
+        const lEnglish = document.getElementById('link-english').value.trim();
+
+        if(!lKorean || !lEnglish) return alert("내용을 입력해 주세요.");
+
+        await updateDoc(doc(db, "words", parentId), {
+            links: arrayUnion({ korean: lKorean, english: lEnglish, createdAt: new Date().getTime() })
+        });
+        linkModal.style.display = 'none';
+    });
+
+    // --- 5) 플래시카드 기능 고도화 세팅 ---
+    function initFlashcard(sourceArray) {
+        flashcardPool = [...sourceArray];
+        currentFlashIndex = 0;
+        isCardRevealed = false;
+        scoreVCount = 0;
+        scoreXCount = 0;
+        if(!isReviewModeActive) wrongWordsIds = [];
+        
+        // UI 액션 및 영역 리셋
+        document.getElementById('fc-actions').style.display = 'flex';
+        showFlashcard();
+    }
+
+    function showFlashcard() {
+        const koreanEl = document.getElementById('fc-korean');
+        const englishEl = document.getElementById('fc-english');
+        const progEl = document.getElementById('fc-progress');
+        const catEl = document.getElementById('fc-category');
+        const mainContent = document.getElementById('fc-main-content');
+
+        if(flashcardPool.length === 0) {
+            koreanEl.innerHTML = isReviewModeActive ? "👏 틀린 문장 복습이 완료되었습니다!" : "저장된 문장이 없습니다. 홈에서 추가해 보세요!";
+            englishEl.style.display = "none";
+            progEl.innerText = "0 / 0";
+            catEl.innerText = "완료";
+            document.getElementById('fc-actions').style.display = 'none';
+            return;
+        }
+
+        const currentWord = flashcardPool[currentFlashIndex];
+        progEl.innerText = `${currentFlashIndex + 1} / ${flashcardPool.length}`;
+        catEl.innerText = currentWord.category || '일상';
+        koreanEl.innerText = currentWord.korean;
+        englishEl.innerText = currentWord.english;
+
+        if(isCardRevealed) {
+            englishEl.style.display = "block";
+        } else {
+            englishEl.style.display = "none";
+        }
+    }
+
+    // 카드 영역 클릭 토글 제어
+    document.getElementById('flashcard-box').addEventListener('click', () => {
+        if(flashcardPool.length === 0 || currentFlashIndex >= flashcardPool.length) return;
+        isCardRevealed = !isCardRevealed;
+        showFlashcard();
+    });
+
+    // 카드 이동 및 점수 통계 기록 함수
+    function processCardScore(status) {
+        if(flashcardPool.length === 0) return;
+        const currentWord = flashcardPool[currentFlashIndex];
+
+        if(status === 'V') {
+            scoreVCount++;
+        } else {
+            scoreXCount++;
+            if(!wrongWordsIds.includes(currentWord.id)) {
+                wrongWordsIds.push(currentWord.id);
+            }
+        }
+
+        // 전체 카드를 모두 다 완수했는지 확인 검사
+        if(currentFlashIndex + 1 >= flashcardPool.length) {
+            renderFinalReport();
+        } else {
+            currentFlashIndex++;
+            isCardRevealed = false;
+            showFlashcard();
+        }
+    }
+
+    // 최종 결과 학습 통계 리포트 화면 구현
+    function renderFinalReport() {
+        const mainContent = document.getElementById('fc-main-content');
+        document.getElementById('fc-actions').style.display = 'none';
+        document.getElementById('fc-progress').innerText = "종료";
+
+        let reviewBtnHtml = '';
+        if(wrongWordsIds.length > 0) {
+            reviewBtnHtml = `<button class="btn btn-submit" id="btn-start-wrong-review" style="margin-top:15px; width:100%;">❌ 틀린 문장 (${wrongWordsIds.length}개) 바로 복습하기</button>`;
+        }
+
+        mainContent.innerHTML = `
+            <div class="result-panel">
+                <h3 style="font-size:20px; color:#333;">✨ 학습 완료 리포트</h3>
+                <div class="result-score">${scoreVCount} <span style="font-size:20px; color:#555;">정답</span> / ${scoreXCount} <span style="font-size:20px; color:#555;">오답</span></div>
+                <p style="font-size:14px; color:var(--text-sub);">전체 ${flashcardPool.length}개 문장 학습을 마쳤습니다.</p>
+                ${reviewBtnHtml}
+                <button class="btn btn-cancel" id="btn-fc-reset-all" style="margin-top:10px; width:100%;">처음부터 다시 학습</button>
+            </div>
+        `;
+
+        // 결과 리포트 내부 버튼 이벤트 연동 바인딩
+        if(wrongWordsIds.length > 0) {
+            document.getElementById('btn-start-wrong-review').addEventListener('click', () => {
+                isReviewModeActive = true;
+                document.getElementById('fc-btn-review-mode').classList.add('active');
+                restoreFcLayout();
+                const filteredWrong = allWords.filter(w => wrongWordsIds.includes(w.id));
+                initFlashcard(filteredWrong);
+            });
+        }
+
+        document.getElementById('btn-fc-reset-all').addEventListener('click', () => {
+            isReviewModeActive = false;
+            document.getElementById('fc-btn-review-mode').classList.remove('active');
+            restoreFcLayout();
+            initFlashcard(allWords);
+        });
+    }
+
+    // 결과 레이아웃 복구 헬퍼
+    function restoreFcLayout() {
+        const mainContent = document.getElementById('fc-main-content');
+        mainContent.innerHTML = `
+            <h2 id="fc-korean" style="font-size: 22px; word-break: keep-all; margin-bottom: 15px; padding: 0 10px;"></h2>
+            <h3 id="fc-english" style="font-size: 19px; color: var(--primary-color); font-weight: bold; font-family: monospace; display: none; padding: 0 10px; word-break: break-all;"></h3>
+        `;
+    }
+
+    // 하단 제어 버튼 기기 액션 매핑
+    document.getElementById('fc-btn-v').addEventListener('click', (e) => { e.stopPropagation(); processCardScore('V'); });
+    document.getElementById('fc-btn-x').addEventListener('click', (e) => { e.stopPropagation(); processCardScore('X'); });
+    document.getElementById('fc-btn-audio').addEventListener('click', (e) => { e.stopPropagation(); if(flashcardPool[currentFlashIndex]) speak(flashcardPool[currentFlashIndex].english); });
+    document.getElementById('fc-btn-edit').addEventListener('click', (e) => { e.stopPropagation(); if(flashcardPool[currentFlashIndex]) openEditModal(flashcardPool[currentFlashIndex]); });
+
+    // --- 상단 툴바 옵션 버튼 이벤트 추가 ---
+    // 랜덤 섞기 스크립트 연동
+    document.getElementById('fc-btn-shuffle').addEventListener('click', () => {
+        if(flashcardPool.length <= 1) return;
+        restoreFcLayout();
+        // 피셔-예이츠 알고리즘 기반 셔플 처리
+        for (let i = flashcardPool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [flashcardPool[i], flashcardPool[j]] = [flashcardPool[j], flashcardPool[i]];
+        }
+        currentFlashIndex = 0;
+        isCardRevealed = false;
+        document.getElementById('fc-actions').style.display = 'flex';
+        showFlashcard();
+    });
+
+    // 상단 틀린문장 수동 복습 전환 토글 버튼
+    document.getElementById('fc-btn-review-mode').addEventListener('click', () => {
+        if(wrongWordsIds.length === 0) {
+            alert("아직 오답 체크(X)된 문장이 없습니다!");
+            return;
+        }
+        isReviewModeActive = !isReviewModeActive;
+        restoreFcLayout();
+        if(isReviewModeActive) {
+            document.getElementById('fc-btn-review-mode').classList.add('active');
+            const targetWrong = allWords.filter(w => wrongWordsIds.includes(w.id));
+            initFlashcard(targetWrong);
+        } else {
+            document.getElementById('fc-btn-review-mode').classList.remove('active');
+            initFlashcard(allWords);
+        }
+    });
+
+    // --- 3) 자판 단축키(노트북) 입력 리스너 매핑 설정 ---
+window.addEventListener('keydown', (e) => {
+    if(!document.getElementById('tab-flashcard').classList.contains('active')) return;
+    if(flashcardPool.length === 0) return;
+
+    if(e.key === 'ArrowLeft') {
+        // 이전 카드로 이동 (점수 처리 없음)
+        if(currentFlashIndex > 0) {
+            currentFlashIndex--;
+            isCardRevealed = false;
+            showFlashcard();
+        }
+    } else if(e.key === 'ArrowRight') {
+        // 다음 카드로 이동 (점수 처리 없음)
+        if(currentFlashIndex < flashcardPool.length - 1) {
+            currentFlashIndex++;
+            isCardRevealed = false;
+            showFlashcard();
+        }
+    } else if(e.key === ' ' || e.code === 'Space') {
+        e.preventDefault(); 
+        isCardRevealed = !isCardRevealed;
+        showFlashcard();
+    }
+});
+
+    // --- 3) 모바일 터치 스와이프 제어 인프라 구축 ---
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const cardZone = document.getElementById('flashcard-box');
+
+    cardZone.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches.screenX;
+    }, false);
+
+    cardZone.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches.screenX;
+        handleSwipeGesture();
+    }, false);
+
+    function handleSwipeGesture() {
+        const threshold = 60; // 최소 반응 스와이프 거리 픽셀값 임계치 설정
+        if (touchStartX - touchEndX > threshold) {
+            // 왼쪽으로 스위프 밀기 액션 발생 시 -> 다음 카드로 진행 (V)
+            processCardScore('V');
+        } else if (touchEndX - touchStartX > threshold) {
+            // 오른쪽으로 스위프 밀기 액션 발생 시 -> 이전 느낌으로 넘기기 처리 (편의상 동일 라우팅 매핑)
+            processCardScore('X');
+        }
+    }
+
+    // 실시간 인풋 매칭 검색 필터
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        const val = e.target.value.toLowerCase();
+        const filtered = allWords.filter(w => 
+            w.korean.toLowerCase().includes(val) || 
+            w.english.toLowerCase().includes(val) ||
+            (w.memo && w.memo.toLowerCase().includes(val))
+        );
+        renderWordList(filtered);
+    });
+
+    window.speakText = speak;
+</script>
+</body>
+</html>
