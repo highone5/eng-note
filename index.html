@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link id="font-link" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Nanum+Gothic:wght@400;700&family=Binggrae:wght@400;700&family=Cafe24Anemone&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
     
     <style>
       :root {
@@ -16,9 +17,9 @@
     --card-bg: #ffffff;
     --text-main: #333333;
     --text-sub: #888888;
-   /* 한국어는 Noto Sans KR, 영어는 고정폭(monospace)을 우선하도록 설정 */
-    --app-font: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --english-font: "Courier New", Courier, monospace;
+   /* 한국어는 Pretendard, 영어는 JetBrains Mono */
+    --app-font: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --english-font: "JetBrains Mono", monospace;
 }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--app-font); }
         body { background-color: #f5f5f5; color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; }
@@ -36,9 +37,9 @@
         /* 상단 대시보드 필터 멀티 카드 (전체 / 오늘 / 즐겨찾기) */
         .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .dash-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 16px; padding: 12px 5px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
-        .dash-card.active { border-color: var(--primary-color); background: #fffbfb; }
+        .dash-card.active { border-color: #e0e0e0; background: #fff; }
         .dash-card i { font-size: 18px; color: var(--text-sub); margin-bottom: 6px; display: block; }
-        .dash-card.active i { color: var(--primary-color); }
+        .dash-card.active i { color: var(--text-sub); }
         .dash-card .count { display: inline-block; background: var(--primary-color); color: white; padding: 1px 8px; border-radius: 10px; font-size: 11px; margin-top: 4px; font-weight: bold; }
         
         /* 검색창 디자인 */
@@ -49,28 +50,36 @@
         /* 문장 카드 스타일 정밀화 */
         .word-card { background: #fff; border: 1px solid #e8e8e8; border-radius: 24px; padding: 22px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); position: relative; }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .category-tag { background: #fff0ee; color: var(--primary-color); padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .category-tag { display: none; }
         .card-actions { display: flex; gap: 15px; color: var(--text-sub); cursor: pointer; font-size: 18px; align-items: center; }
         .card-actions i.fa-star.active { color: #ffca28; }
         .card-actions i:hover { color: var(--primary-color); }
         .korean-txt { font-size: 19px; font-weight: bold; margin-bottom: 10px; line-height: 1.4; }
         
-        /* 영어 문장 볼드(Bold) 적용 및 블러 스타일 */
-        .english-blur-box { font-size: 17px; color: var(--primary-color); font-weight: bold; font-family: monospace; margin-bottom: 12px; line-height: 1.4; cursor: pointer; transition: filter 0.2s ease; display: block; }
-       .english-blur-box { 
-    font-size: 17px; 
-    color: var(--text-main); /* 이제 검은색으로 고정됩니다 */
-    font-weight: bold; 
-    font-family: monospace; 
-    margin-bottom: 12px; 
-    line-height: 1.4; 
-    display: block; 
-}
-        
+        /* 영어 문장 (bold 제거) */
+        .english-blur-box { font-size: 17px; color: var(--text-main); font-weight: normal; font-family: monospace; margin-bottom: 12px; line-height: 1.4; display: block; }
+
+        /* 스트릭 배너 */
+        .streak-banner { background: #fff0ee; border-radius: 16px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+        .streak-info { display: flex; align-items: center; gap: 10px; }
+        .streak-info i { font-size: 22px; color: var(--primary-color); }
+        .streak-title { font-size: 13px; font-weight: bold; color: var(--text-main); }
+        .streak-sub { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+        .streak-days { display: flex; gap: 4px; }
+        .streak-day { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; }
+        .sd-done { background: var(--primary-color); color: white; }
+        .sd-skip { background: #f0f0f0; color: var(--text-sub); }
+        .sd-today { border: 2px solid var(--primary-color); color: var(--primary-color); background: white; }
+
+        /* 정렬 칩 */
+        .sort-row { display: flex; gap: 6px; margin-bottom: 14px; }
+        .sort-chip { padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid #e0e0e0; color: var(--text-sub); background: #fff; cursor: pointer; transition: all 0.15s; }
+        .sort-chip.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
         /* 연결 문장 리스트 디자인 내 중복 명칭 제거 버전 */
         .link-section { border-top: 1px dashed #eee; padding-top: 12px; margin-top: 12px; }
         .link-item { background: #fafafa; border: 1px solid #f0f0f0; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .link-item .en-txt { font-weight: bold; font-size: 14px; color: var(--primary-color); font-family: monospace; }
+        .link-item .en-txt { font-weight: normal; font-size: 14px; color: var(--text-main); font-family: monospace; }
         
         /* 하단 컴팩트 문장 추가 버튼 */
         .add-link-btn { color: var(--text-sub); font-size: 12px; cursor: pointer; font-weight: 500; display: inline-block; margin-top: 5px; transition: color 0.2s; }
@@ -140,6 +149,16 @@
     <header id="app-logo">ENG <span>ZIP</span></header>
 
     <div id="tab-home" class="tab-content active">
+        <div id="streak-banner" class="streak-banner" style="display:none;">
+            <div class="streak-info">
+                <i class="fa-solid fa-fire"></i>
+                <div>
+                    <div class="streak-title" id="streak-title">0일 연속 학습 중!</div>
+                    <div class="streak-sub" id="streak-sub">오늘 학습하면 1일 달성</div>
+                </div>
+            </div>
+            <div class="streak-days" id="streak-days"></div>
+        </div>
         <div class="dashboard">
             <div class="dash-card active" id="filter-all"><i class="fa-solid fa-border-all"></i>전체<br><span class="count" id="count-all">0</span></div>
             <div class="dash-card" id="filter-today"><i class="fa-solid fa-calendar-day"></i>오늘<br><span class="count" id="count-today">0</span></div>
@@ -148,6 +167,10 @@
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="search-input" placeholder="영어 단어나 한국어로 검색...">
+        </div>
+        <div class="sort-row">
+            <div class="sort-chip active" id="sort-newest"><i class="fa-solid fa-arrow-down" style="font-size:10px;"></i> 최신순</div>
+            <div class="sort-chip" id="sort-oldest"><i class="fa-solid fa-arrow-up" style="font-size:10px;"></i> 오래된순</div>
         </div>
         <div id="word-list-container"></div>
     </div>
@@ -164,7 +187,7 @@
             
             <div id="fc-main-content" style="width:100%;">
                 <h2 id="fc-korean" style="font-size: 22px; word-break: keep-all; margin-bottom: 15px; padding: 0 10px;">저장된 문장이 없습니다.</h2>
-                <h3 id="fc-english" style="font-size: 19px; color: var(--primary-color); font-weight: bold; font-family: monospace; display: none; padding: 0 10px; word-break: break-all;"></h3>
+                <h3 id="fc-english" style="font-size: 19px; color: var(--primary-color); font-weight: bold; font-family: var(--english-font); display: none; padding: 0 10px; word-break: break-all;"></h3>
             </div>
         </div>
         
@@ -180,13 +203,12 @@
         <div class="settings-section">
             <h3>어플 테마 색상 변경</h3>
             <div class="color-picker">
-                <div class="color-picker">
-    <div><div class="color-dot" style="background: #ff6f61;" data-color="#ff6f61"></div><span class="color-name">오렌지</span></div>
-    <div><div class="color-dot" style="background: #4f46e5;" data-color="#4f46e5"></div><span class="color-name">인디고</span></div>
-    <div><div class="color-dot" style="background: #0d9488;" data-color="#0d9488"></div><span class="color-name">딥청록</span></div>
-    <div><div class="color-dot" style="background: #8b5cf6;" data-color="#8b5cf6"></div><span class="color-name">소프트퍼플</span></div>
-    <div><div class="color-dot" style="background: #475569;" data-color="#475569"></div><span class="color-name">슬레이트</span></div>
-</div>
+                <div><div class="color-dot" style="background: #ff6f61;" data-color="#ff6f61"></div><span class="color-name">오렌지</span></div>
+                <div><div class="color-dot" style="background: #4f46e5;" data-color="#4f46e5"></div><span class="color-name">인디고</span></div>
+                <div><div class="color-dot" style="background: #e11d48;" data-color="#e11d48"></div><span class="color-name">로즈</span></div>
+                <div><div class="color-dot" style="background: #0d9488;" data-color="#0d9488"></div><span class="color-name">틸</span></div>
+                <div><div class="color-dot" style="background: #7c3aed;" data-color="#7c3aed"></div><span class="color-name">바이올렛</span></div>
+            </div>
         </div>
         <div class="settings-section">
             <h3>데이터 동기화 관리</h3>
@@ -214,14 +236,6 @@
                 <label>메모 (선택)</label>
                 <input type="text" id="input-memo" placeholder="예: 격식체, 비즈니스용...">
             </div>
-            <div class="form-group">
-                <label>카테고리</label>
-                <select id="input-category">
-                    <option value="일상">일상</option>
-                    <option value="여행">여행</option>
-                    <option value="업무">업무</option>
-                </select>
-            </div>
             <div class="modal-btns">
                 <button class="btn btn-cancel" id="close-add-modal">취소</button>
                 <button class="btn btn-submit" id="btn-save-word">저장하기</button>
@@ -244,14 +258,6 @@
             <div class="form-group">
                 <label>메모</label>
                 <input type="text" id="edit-memo">
-            </div>
-            <div class="form-group">
-                <label>카테고리</label>
-                <select id="edit-category">
-                    <option value="일상">일상</option>
-                    <option value="여행">여행</option>
-                    <option value="업무">업무</option>
-                </select>
             </div>
             <div class="modal-btns">
                 <button class="btn btn-submit" id="btn-edit-submit">수정</button>
@@ -280,7 +286,28 @@
         </div>
     </div>
 
-    <nav>
+    <div class="modal" id="link-edit-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">추가 문장 관리</h3>
+            <input type="hidden" id="link-edit-parent-id">
+            <input type="hidden" id="link-edit-created-at">
+            <div class="form-group">
+                <label>한국어 문장</label>
+                <input type="text" id="link-edit-korean" placeholder="한국어 문장">
+            </div>
+            <div class="form-group">
+                <label>영어 문장</label>
+                <input type="text" id="link-edit-english" placeholder="English sentence">
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-submit" id="btn-link-edit-submit">수정</button>
+                <button class="btn btn-danger" id="btn-link-edit-delete">삭제</button>
+                <button class="btn btn-cancel" id="close-link-edit-modal">닫기</button>
+            </div>
+        </div>
+    </div>
+
+        <nav>
         <div class="nav-item active" data-tab="tab-home"><i class="fa-solid fa-house"></i>홈</div>
         <div class="nav-item" data-tab="tab-flashcard"><i class="fa-solid fa-id-card"></i>플래시카드</div>
         <div class="nav-item" data-tab="tab-setting"><i class="fa-solid fa-gear"></i>설정</div>
@@ -309,7 +336,8 @@
     let flashcardPool = []; 
     let currentFlashIndex = 0;
     let isCardRevealed = false; 
-    let currentFilter = 'all'; 
+    let currentFilter = 'all';
+    let currentSort = 'newest';
 
     // 오답 저장을 위한 통계 배열 변수
     let scoreVCount = 0;
@@ -331,6 +359,60 @@
         });
     });
 
+
+    // 정렬 칩 이벤트
+    document.getElementById('sort-newest').addEventListener('click', () => {
+        currentSort = 'newest';
+        document.getElementById('sort-newest').classList.add('active');
+        document.getElementById('sort-oldest').classList.remove('active');
+        applyFilter();
+    });
+    document.getElementById('sort-oldest').addEventListener('click', () => {
+        currentSort = 'oldest';
+        document.getElementById('sort-oldest').classList.add('active');
+        document.getElementById('sort-newest').classList.remove('active');
+        applyFilter();
+    });
+
+    // 스트릭 초기화
+    function initStreak() {
+        const todayStr = new Date().toDateString();
+        let streakData = JSON.parse(localStorage.getItem('eng-streak') || '{"dates":[],"lastDate":null}');
+        if(streakData.lastDate !== todayStr) {
+            if(!streakData.dates.includes(todayStr)) streakData.dates.push(todayStr);
+            streakData.lastDate = todayStr;
+            localStorage.setItem('eng-streak', JSON.stringify(streakData));
+        }
+        renderStreak(streakData.dates);
+    }
+
+    function renderStreak(dates) {
+        const banner = document.getElementById('streak-banner');
+        const days = ['일','월','화','수','목','금','토'];
+        const today = new Date();
+        let streak = 0;
+        for(let i = 0; i < 30; i++) {
+            const d = new Date(today); d.setDate(today.getDate() - i);
+            if(dates.includes(d.toDateString())) streak++;
+            else break;
+        }
+        document.getElementById('streak-title').innerText = streak + '일 연속 학습 중!';
+        document.getElementById('streak-sub').innerText = streak > 0 ? streak + '일째 이어가는 중 💪' : '오늘 학습하면 1일 달성';
+        const daysEl = document.getElementById('streak-days');
+        daysEl.innerHTML = '';
+        for(let i = 6; i >= 0; i--) {
+            const d = new Date(today); d.setDate(today.getDate() - i);
+            const dStr = d.toDateString();
+            const dayName = days[d.getDay()];
+            const isToday = i === 0;
+            const isDone = dates.includes(dStr);
+            const cls = isToday ? 'streak-day sd-today' : isDone ? 'streak-day sd-done' : 'streak-day sd-skip';
+            daysEl.innerHTML += '<div class="' + cls + '">' + dayName + '</div>';
+        }
+        banner.style.display = 'flex';
+    }
+
+    initStreak();
 
     // 헤더 타이틀 클릭 시 리스트 복구 및 리셋
     document.getElementById('app-logo').addEventListener('click', () => {
@@ -375,8 +457,37 @@
     const editModal = document.getElementById('edit-modal');
     document.getElementById('close-edit-modal').addEventListener('click', () => editModal.style.display = 'none');
 
+    const linkEditModal = document.getElementById('link-edit-modal');
+    document.getElementById('close-link-edit-modal').addEventListener('click', () => linkEditModal.style.display = 'none');
+
     const linkModal = document.getElementById('link-modal');
     document.getElementById('close-link-modal').addEventListener('click', () => linkModal.style.display = 'none');
+
+    document.getElementById('btn-link-edit-submit').addEventListener('click', async () => {
+        const parentId = document.getElementById('link-edit-parent-id').value;
+        const createdAt = parseInt(document.getElementById('link-edit-created-at').value);
+        const newKorean = document.getElementById('link-edit-korean').value.trim();
+        const newEnglish = document.getElementById('link-edit-english').value.trim();
+        if(!newKorean || !newEnglish) return alert("내용을 입력해 주세요.");
+        const parentWord = allWords.find(w => w.id === parentId);
+        if(!parentWord) return;
+        const updatedLinks = parentWord.links.map(l => l.createdAt === createdAt ? { ...l, korean: newKorean, english: newEnglish } : l);
+        await updateDoc(doc(db, "words", parentId), { links: updatedLinks });
+        linkEditModal.style.display = 'none';
+    });
+
+    document.getElementById('btn-link-edit-delete').addEventListener('click', async () => {
+        const parentId = document.getElementById('link-edit-parent-id').value;
+        const createdAt = parseInt(document.getElementById('link-edit-created-at').value);
+        if(!confirm("이 추가 문장을 삭제할까요?")) return;
+        const parentWord = allWords.find(w => w.id === parentId);
+        if(!parentWord) return;
+        const updatedLinks = parentWord.links.filter(l => l.createdAt !== createdAt);
+        await updateDoc(doc(db, "words", parentId), { links: updatedLinks });
+        linkEditModal.style.display = 'none';
+    });
+
+
 
     // TTS 음성 출력 엔진
     function speak(text) {
@@ -434,6 +545,9 @@
         } else if(currentFilter === 'star') {
             filtered = allWords.filter(w => w.starred === true);
         }
+        if(currentSort === 'oldest') {
+            filtered = filtered.slice().reverse();
+        }
         renderWordList(filtered);
     }
 
@@ -454,19 +568,19 @@
             let linksHtml = '';
             if(word.links && word.links.length > 0) {
                 linksHtml = `<div class="link-section">`; // 중복 문구 완벽 삭제 완료
-               word.links.forEach((link, index) => {
-    linksHtml += `
-        <div class="link-item">
-            <div>
-                <strong style="font-size:15px; display:block; margin-bottom:2px;">${link.korean}</strong>
-                <span class="en-txt">${link.english}</span>
-            </div>
-            <div style="display:flex; gap:10px;">
-                <i class="fa-solid fa-volume-high" id="link-audio-${word.id}-${index}" style="cursor:pointer;"></i>
-                <i class="fa-solid fa-trash" id="link-del-${word.id}-${index}" style="cursor:pointer; color:#ff5252;"></i>
-            </div>
-        </div>`;
-});
+                word.links.forEach(link => {
+                    linksHtml += `
+                        <div class="link-item">
+                            <div>
+                                <strong style="font-size:15px; display:block; margin-bottom:2px;">${link.korean}</strong>
+                                <span class="en-txt">${link.english}</span>
+                            </div>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <i class="fa-solid fa-volume-high" style="color:var(--text-sub); cursor:pointer; font-size:16px;" id="link-audio-${word.id}-${link.createdAt}"></i>
+                                <i class="fa-solid fa-ellipsis" style="color:var(--text-sub); cursor:pointer; font-size:16px;" id="link-menu-${word.id}-${link.createdAt}"></i>
+                            </div>
+                        </div>`;
+                });
                 linksHtml += `</div>`;
             }
 
@@ -474,8 +588,7 @@
 
             card.innerHTML = `
                 <div class="card-header">
-                    <span class="category-tag">${word.category || '일상'}</span>
-                    <div class="card-actions">
+                    <div class="card-actions" style="margin-left:auto;">
                         <i class="fa-star ${isStarred ? 'fa-solid active' : 'fa-regular'}" id="star-${word.id}"></i>
                         <i class="fa-solid fa-volume-high" id="audio-${word.id}"></i>
                         <i class="fa-solid fa-ellipsis" id="menu-${word.id}"></i>
@@ -483,11 +596,11 @@
                 </div>
                 <div class="korean-txt">${word.korean}</div>
                 <div>
-                    <div class="english-blur-box blurred" id="en-box-${word.id}">${word.english}</div>
+                    <div class="english-blur-box" id="en-box-${word.id}">${word.english}</div>
                 </div>
                 <div style="font-size:13px; color:var(--text-sub); margin-bottom:5px;">${word.memo ? '💡 ' + word.memo : ''}</div>
                 ${linksHtml}
-                <div class="add-link-btn" id="add-link-${word.id}"><i class="fa-solid fa-link"></i> + 문장 추가</div>
+                <div class="add-link-btn" id="add-link-${word.id}">+ 문장 추가</div>
             `;
 
             container.appendChild(card);
@@ -496,10 +609,6 @@
             const addLinkBtn = card.querySelector(`#add-link-${word.id}`);
             addLinkBtn.style.fontSize = "12px";
             addLinkBtn.style.color = "var(--text-sub)";
-
-            // 영어 블러 토글 바인딩
-            const enBox = card.querySelector(`#en-box-${word.id}`);
-            enBox.addEventListener('click', (e) => { e.stopPropagation(); enBox.classList.toggle('blurred'); });
 
             // 별 아이콘 즐겨찾기 토글 시스템 연동
             card.querySelector(`#star-${word.id}`).addEventListener('click', async (e) => {
@@ -514,20 +623,19 @@
                 word.links.forEach(link => {
                     const btn = card.querySelector(`#link-audio-${word.id}-${link.createdAt}`);
                     if(btn) btn.addEventListener('click', (e) => { e.stopPropagation(); speak(link.english); });
+
+                    const menuBtn = card.querySelector(`#link-menu-${word.id}-${link.createdAt}`);
+                    if(menuBtn) menuBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        document.getElementById('link-edit-parent-id').value = word.id;
+                        document.getElementById('link-edit-created-at').value = link.createdAt;
+                        document.getElementById('link-edit-korean').value = link.korean;
+                        document.getElementById('link-edit-english').value = link.english;
+                        document.getElementById('link-edit-modal').style.display = 'flex';
+                    });
                 });
             }
-if(word.links && word.links.length > 0) {
-    word.links.forEach((link, index) => {
-        card.querySelector(`#link-audio-${word.id}-${index}`).addEventListener('click', (e) => { e.stopPropagation(); speak(link.english); });
-        card.querySelector(`#link-del-${word.id}-${index}`).addEventListener('click', async (e) => { 
-            e.stopPropagation();
-            if(confirm("삭제할까요?")) {
-                const newLinks = word.links.filter((_, i) => i !== index);
-                await updateDoc(doc(db, "words", word.id), { links: newLinks });
-            }
-        });
-    });
-}
+
             addLinkBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 document.getElementById('link-parent-id').value = word.id;
@@ -544,7 +652,6 @@ if(word.links && word.links.length > 0) {
         document.getElementById('edit-korean').value = word.korean;
         document.getElementById('edit-english').value = word.english;
         document.getElementById('edit-memo').value = word.memo || '';
-        document.getElementById('edit-category').value = word.category || '일상';
         editModal.style.display = 'flex';
     }
 
@@ -553,10 +660,9 @@ if(word.links && word.links.length > 0) {
         const uKorean = document.getElementById('edit-korean').value.trim();
         const uEnglish = document.getElementById('edit-english').value.trim();
         const uMemo = document.getElementById('edit-memo').value.trim();
-        const uCategory = document.getElementById('edit-category').value;
 
         if(!uKorean || !uEnglish) return alert("내용을 채워주세요.");
-        await updateDoc(doc(db, "words", id), { korean: uKorean, english: uEnglish, memo: uMemo, category: uCategory });
+        await updateDoc(doc(db, "words", id), { korean: uKorean, english: uEnglish, memo: uMemo });
         editModal.style.display = 'none';
     });
 
@@ -573,7 +679,6 @@ if(word.links && word.links.length > 0) {
         const korean = document.getElementById('input-korean').value.trim();
         const english = document.getElementById('input-english').value.trim();
         const memo = document.getElementById('input-memo').value.trim();
-        const category = document.getElementById('input-category').value;
 
         if(!korean || !english) return alert("한국어와 영어 문장을 모두 입력해 주세요.");
 
@@ -581,7 +686,6 @@ if(word.links && word.links.length > 0) {
             korean: korean,
             english: english,
             memo: memo,
-            category: category,
             links: [],
             starred: false,
             createdAt: new Date()
@@ -725,7 +829,7 @@ if(word.links && word.links.length > 0) {
         const mainContent = document.getElementById('fc-main-content');
         mainContent.innerHTML = `
             <h2 id="fc-korean" style="font-size: 22px; word-break: keep-all; margin-bottom: 15px; padding: 0 10px;"></h2>
-            <h3 id="fc-english" style="font-size: 19px; color: var(--primary-color); font-weight: bold; font-family: monospace; display: none; padding: 0 10px; word-break: break-all;"></h3>
+            <h3 id="fc-english" style="font-size: 19px; color: var(--primary-color); font-weight: bold; font-family: var(--english-font); display: none; padding: 0 10px; word-break: break-all;"></h3>
         `;
     }
 
