@@ -54,13 +54,13 @@
         .card-actions { display: flex; gap: 15px; color: var(--text-sub); cursor: pointer; font-size: 18px; align-items: center; }
         .card-actions i.fa-star.active { color: #ffca28; }
         .card-actions i:hover { color: var(--primary-color); }
-        .korean-txt { font-size: 19px; font-weight: bold; margin-bottom: 10px; line-height: 1.4; }
+        .korean-txt { font-size: 18px; font-weight: 700; margin-bottom: 8px; line-height: 1.4; font-family: var(--app-font); }
         
-        /* 영어 문장 (bold 제거) */
-        .english-blur-box { font-size: 17px; color: var(--text-main); font-weight: normal; font-family: monospace; margin-bottom: 12px; line-height: 1.4; display: block; }
+        /* 영어 문장 */
+        .english-blur-box { font-size: 14px; color: var(--text-main); font-weight: normal; font-family: var(--english-font) !important; margin-bottom: 12px; line-height: 1.5; display: block; }
 
         /* 스트릭 배너 */
-        .streak-banner { background: #fff0ee; border-radius: 16px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+        .streak-banner { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 16px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
         .streak-info { display: flex; align-items: center; gap: 10px; }
         .streak-info i { font-size: 22px; color: var(--primary-color); }
         .streak-title { font-size: 13px; font-weight: bold; color: var(--text-main); }
@@ -92,13 +92,14 @@
         .nav-item i { font-size: 22px; margin-bottom: 4px; display: block; }
         
         /* 플로팅 액션 우측 버튼 (+) */
-        .fab { position: absolute; right: 20px; bottom: 90px; width: 56px; height: 56px; background: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 5; transition: transform 0.1s; }
+        .fab { position: fixed; right: calc(50% - 250px + 20px); bottom: 75px; width: 56px; height: 56px; background: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 20; transition: transform 0.1s; }
+        @media (max-width: 500px) { .fab { right: 20px; } }
         .fab:active { transform: scale(0.95); }
         
         /* 공용 바텀시트 모달 팝업 구조 */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: flex-end; z-index: 100; }
-        .modal-content { background: white; width: 100%; max-width: 500px; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 30px 20px; animation: slideUp 0.25s ease-out; max-height: 85vh; overflow-y: auto; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; width: 90%; max-width: 460px; border-radius: 25px; padding: 30px 20px; animation: fadeScaleIn 0.2s ease-out; max-height: 85vh; overflow-y: auto; }
+        @keyframes fadeScaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         
         .form-group { margin-bottom: 18px; }
         .form-group label { display: block; font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #555; }
@@ -179,11 +180,15 @@
         <div class="fc-top-bar">
             <button class="fc-ctrl-btn" id="fc-btn-shuffle"><i class="fa-solid fa-shuffle"></i> 랜덤 섞기</button>
             <button class="fc-ctrl-btn" id="fc-btn-review-mode"><i class="fa-solid fa-triangle-exclamation"></i> 틀린문장 복습</button>
+            <button class="fc-ctrl-btn" id="fc-btn-star-mode"><i class="fa-solid fa-star"></i> 즐겨찾기</button>
         </div>
         
         <div class="flashcard-area" id="flashcard-box">
             <span class="category-tag" style="position: absolute; top: 20px; left: 20px;" id="fc-category">일상</span>
-            <span style="position: absolute; top: 20px; right: 20px; color: var(--text-sub); font-size: 13px;" id="fc-progress">0 / 0</span>
+            <span style="position: absolute; top: 14px; right: 20px; display:flex; align-items:center; gap:8px;">
+                <i class="fa-star fa-regular" id="fc-star-btn" style="color:#ffca28; font-size:20px; cursor:pointer;"></i>
+                <span id="fc-progress" style="color: var(--text-sub); font-size: 13px;">0 / 0</span>
+            </span>
             
             <div id="fc-main-content" style="width:100%;">
                 <h2 id="fc-korean" style="font-size: 22px; word-break: keep-all; margin-bottom: 15px; padding: 0 10px;">저장된 문장이 없습니다.</h2>
@@ -203,11 +208,11 @@
         <div class="settings-section">
             <h3>어플 테마 색상 변경</h3>
             <div class="color-picker">
-                <div><div class="color-dot" style="background: #ff6f61;" data-color="#ff6f61"></div><span class="color-name">오렌지</span></div>
-                <div><div class="color-dot" style="background: #4f46e5;" data-color="#4f46e5"></div><span class="color-name">인디고</span></div>
-                <div><div class="color-dot" style="background: #e11d48;" data-color="#e11d48"></div><span class="color-name">로즈</span></div>
+                <div><div class="color-dot" style="background: #f4623a;" data-color="#f4623a"></div><span class="color-name">오렌지코랄</span></div>
+                <div><div class="color-dot" style="background: #1e3a5f;" data-color="#1e3a5f"></div><span class="color-name">딥네이비</span></div>
+                <div><div class="color-dot" style="background: #3730a3;" data-color="#3730a3"></div><span class="color-name">딥인디고</span></div>
                 <div><div class="color-dot" style="background: #0d9488;" data-color="#0d9488"></div><span class="color-name">틸</span></div>
-                <div><div class="color-dot" style="background: #7c3aed;" data-color="#7c3aed"></div><span class="color-name">바이올렛</span></div>
+                <div><div class="color-dot" style="background: #7b6e5d;" data-color="#7b6e5d"></div><span class="color-name">웜모카</span></div>
             </div>
         </div>
         <div class="settings-section">
@@ -436,7 +441,9 @@
         if(tabId === 'tab-flashcard') {
             fab.style.display = 'none';
             isReviewModeActive = false;
+            isStarModeActive = false;
             document.getElementById('fc-btn-review-mode').classList.remove('active');
+            document.getElementById('fc-btn-star-mode').classList.remove('active');
             initFlashcard(allWords);
         } else if(tabId === 'tab-home') {
             fab.style.display = 'flex';
@@ -567,7 +574,7 @@
             
             let linksHtml = '';
             if(word.links && word.links.length > 0) {
-                linksHtml = `<div class="link-section">`; // 중복 문구 완벽 삭제 완료
+                linksHtml = `<div class="link-section">`;
                 word.links.forEach(link => {
                     linksHtml += `
                         <div class="link-item">
@@ -586,9 +593,19 @@
 
             const isStarred = word.starred === true;
 
+            // 날짜 포맷 생성
+            let dateStr = '';
+            if(word.createdAt) {
+                const d = word.createdAt.toDate ? word.createdAt.toDate() : new Date(word.createdAt);
+                const month = d.getMonth() + 1;
+                const day = d.getDate();
+                dateStr = `${month}/${day}`;
+            }
+
             card.innerHTML = `
                 <div class="card-header">
                     <div class="card-actions" style="margin-left:auto;">
+                        <span style="font-size:12px; color:var(--text-sub); font-weight:normal;">${dateStr}</span>
                         <i class="fa-star ${isStarred ? 'fa-solid active' : 'fa-regular'}" id="star-${word.id}"></i>
                         <i class="fa-solid fa-volume-high" id="audio-${word.id}"></i>
                         <i class="fa-solid fa-ellipsis" id="menu-${word.id}"></i>
@@ -598,9 +615,9 @@
                 <div>
                     <div class="english-blur-box" id="en-box-${word.id}">${word.english}</div>
                 </div>
-                <div style="font-size:13px; color:var(--text-sub); margin-bottom:5px;">${word.memo ? '💡 ' + word.memo : ''}</div>
+                <div style="font-size:13px; color:var(--text-sub); margin-bottom:5px; padding-top:${word.memo ? '8px' : '0'}; border-top:${word.memo ? '1px dashed #eee' : 'none'}; margin-top:${word.memo ? '8px' : '0'};">${word.memo ? '💬 ' + word.memo : ''}</div>
                 ${linksHtml}
-                <div class="add-link-btn" id="add-link-${word.id}">+ 문장 추가</div>
+                <div class="add-link-btn" id="add-link-${word.id}">+더하기</div>
             `;
 
             container.appendChild(card);
@@ -711,8 +728,24 @@
     });
 
     // --- 5) 플래시카드 기능 고도화 세팅 ---
+    let isStarModeActive = false;
+
+    function buildFlashcardPool(sourceArray) {
+        // 기본 문장 + 연결 문장 모두 포함
+        const pool = [];
+        sourceArray.forEach(word => {
+            pool.push({ id: word.id, korean: word.korean, english: word.english, starred: word.starred, category: word.category });
+            if(word.links && word.links.length > 0) {
+                word.links.forEach(link => {
+                    pool.push({ id: word.id + '_link_' + link.createdAt, korean: link.korean, english: link.english, starred: word.starred, category: word.category, isLink: true });
+                });
+            }
+        });
+        return pool;
+    }
+
     function initFlashcard(sourceArray) {
-        flashcardPool = [...sourceArray];
+        flashcardPool = buildFlashcardPool(sourceArray);
         currentFlashIndex = 0;
         isCardRevealed = false;
         scoreVCount = 0;
@@ -746,6 +779,17 @@
         koreanEl.innerText = currentWord.korean;
         englishEl.innerText = currentWord.english;
 
+        // 즐겨찾기 버튼 상태 동기화
+        const fcStarBtn = document.getElementById('fc-star-btn');
+        const baseWordId = currentWord.id.split('_link_')[0];
+        const baseWord = allWords.find(w => w.id === baseWordId);
+        const isStarred = baseWord ? baseWord.starred === true : false;
+        if(isStarred) {
+            fcStarBtn.classList.remove('fa-regular'); fcStarBtn.classList.add('fa-solid');
+        } else {
+            fcStarBtn.classList.remove('fa-solid'); fcStarBtn.classList.add('fa-regular');
+        }
+
         if(isCardRevealed) {
             englishEl.style.display = "block";
         } else {
@@ -769,8 +813,9 @@
             scoreVCount++;
         } else {
             scoreXCount++;
-            if(!wrongWordsIds.includes(currentWord.id)) {
-                wrongWordsIds.push(currentWord.id);
+            const baseId = currentWord.id.split('_link_')[0];
+            if(!wrongWordsIds.includes(baseId)) {
+                wrongWordsIds.push(baseId);
             }
         }
 
@@ -862,6 +907,8 @@
             return;
         }
         isReviewModeActive = !isReviewModeActive;
+        isStarModeActive = false;
+        document.getElementById('fc-btn-star-mode').classList.remove('active');
         restoreFcLayout();
         if(isReviewModeActive) {
             document.getElementById('fc-btn-review-mode').classList.add('active');
@@ -871,6 +918,37 @@
             document.getElementById('fc-btn-review-mode').classList.remove('active');
             initFlashcard(allWords);
         }
+    });
+
+    // 즐겨찾기 모드 버튼
+    document.getElementById('fc-btn-star-mode').addEventListener('click', () => {
+        const starredWords = allWords.filter(w => w.starred === true);
+        if(starredWords.length === 0) {
+            alert("즐겨찾기한 문장이 없습니다!");
+            return;
+        }
+        isStarModeActive = !isStarModeActive;
+        isReviewModeActive = false;
+        document.getElementById('fc-btn-review-mode').classList.remove('active');
+        restoreFcLayout();
+        if(isStarModeActive) {
+            document.getElementById('fc-btn-star-mode').classList.add('active');
+            initFlashcard(starredWords);
+        } else {
+            document.getElementById('fc-btn-star-mode').classList.remove('active');
+            initFlashcard(allWords);
+        }
+    });
+
+    // 플래시카드 내 즐겨찾기 버튼 클릭
+    document.getElementById('fc-star-btn').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if(flashcardPool.length === 0 || currentFlashIndex >= flashcardPool.length) return;
+        const currentWord = flashcardPool[currentFlashIndex];
+        const baseWordId = currentWord.id.split('_link_')[0];
+        const baseWord = allWords.find(w => w.id === baseWordId);
+        if(!baseWord) return;
+        await updateDoc(doc(db, "words", baseWordId), { starred: !baseWord.starred });
     });
 
     // --- 3) 자판 단축키(노트북) 입력 리스너 매핑 설정 ---
