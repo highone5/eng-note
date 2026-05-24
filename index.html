@@ -57,7 +57,15 @@
         
         /* 영어 문장 볼드(Bold) 적용 및 블러 스타일 */
         .english-blur-box { font-size: 17px; color: var(--primary-color); font-weight: bold; font-family: monospace; margin-bottom: 12px; line-height: 1.4; cursor: pointer; transition: filter 0.2s ease; display: block; }
-        .english-blur-box.blurred { filter: blur(5px); user-select: none; }
+       .english-blur-box { 
+    font-size: 17px; 
+    color: var(--text-main); /* 이제 검은색으로 고정됩니다 */
+    font-weight: bold; 
+    font-family: monospace; 
+    margin-bottom: 12px; 
+    line-height: 1.4; 
+    display: block; 
+}
         
         /* 연결 문장 리스트 디자인 내 중복 명칭 제거 버전 */
         .link-section { border-top: 1px dashed #eee; padding-top: 12px; margin-top: 12px; }
@@ -172,12 +180,13 @@
         <div class="settings-section">
             <h3>어플 테마 색상 변경</h3>
             <div class="color-picker">
-                <div><div class="color-dot" style="background: #ff6f61;" data-color="#ff6f61"></div><span class="color-name">오렌지</span></div>
-                <div><div class="color-dot" style="background: #4f46e5;" data-color="#4f46e5"></div><span class="color-name">인디고</span></div>
-                <div><div class="color-dot" style="background: #f59e0b;" data-color="#f59e0b"></div><span class="color-name">선셋골드</span></div>
-                <div><div class="color-dot" style="background: #10b981;" data-color="#10b981"></div><span class="color-name">포레스트</span></div>
-                <div><div class="color-dot" style="background: #1e293b;" data-color="#1e293b"></div><span class="color-name">네이비</span></div>
-            </div>
+                <div class="color-picker">
+    <div><div class="color-dot" style="background: #ff6f61;" data-color="#ff6f61"></div><span class="color-name">오렌지</span></div>
+    <div><div class="color-dot" style="background: #4f46e5;" data-color="#4f46e5"></div><span class="color-name">인디고</span></div>
+    <div><div class="color-dot" style="background: #0d9488;" data-color="#0d9488"></div><span class="color-name">딥청록</span></div>
+    <div><div class="color-dot" style="background: #8b5cf6;" data-color="#8b5cf6"></div><span class="color-name">소프트퍼플</span></div>
+    <div><div class="color-dot" style="background: #475569;" data-color="#475569"></div><span class="color-name">슬레이트</span></div>
+</div>
         </div>
         <div class="settings-section">
             <h3>데이터 동기화 관리</h3>
@@ -445,16 +454,19 @@
             let linksHtml = '';
             if(word.links && word.links.length > 0) {
                 linksHtml = `<div class="link-section">`; // 중복 문구 완벽 삭제 완료
-                word.links.forEach(link => {
-                    linksHtml += `
-                        <div class="link-item">
-                            <div>
-                                <strong style="font-size:15px; display:block; margin-bottom:2px;">${link.korean}</strong>
-                                <span class="en-txt">${link.english}</span>
-                            </div>
-                            <i class="fa-solid fa-volume-high" style="color:var(--text-sub); cursor:pointer; font-size:16px;" id="link-audio-${word.id}-${link.createdAt}"></i>
-                        </div>`;
-                });
+               word.links.forEach((link, index) => {
+    linksHtml += `
+        <div class="link-item">
+            <div>
+                <strong style="font-size:15px; display:block; margin-bottom:2px;">${link.korean}</strong>
+                <span class="en-txt">${link.english}</span>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <i class="fa-solid fa-volume-high" id="link-audio-${word.id}-${index}" style="cursor:pointer;"></i>
+                <i class="fa-solid fa-trash" id="link-del-${word.id}-${index}" style="cursor:pointer; color:#ff5252;"></i>
+            </div>
+        </div>`;
+});
                 linksHtml += `</div>`;
             }
 
@@ -504,7 +516,18 @@
                     if(btn) btn.addEventListener('click', (e) => { e.stopPropagation(); speak(link.english); });
                 });
             }
-
+if(word.links && word.links.length > 0) {
+    word.links.forEach((link, index) => {
+        card.querySelector(`#link-audio-${word.id}-${index}`).addEventListener('click', (e) => { e.stopPropagation(); speak(link.english); });
+        card.querySelector(`#link-del-${word.id}-${index}`).addEventListener('click', async (e) => { 
+            e.stopPropagation();
+            if(confirm("삭제할까요?")) {
+                const newLinks = word.links.filter((_, i) => i !== index);
+                await updateDoc(doc(db, "words", word.id), { links: newLinks });
+            }
+        });
+    });
+}
             addLinkBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 document.getElementById('link-parent-id').value = word.id;
