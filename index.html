@@ -113,8 +113,8 @@
         .btn-danger { background: #fff0ee; color: red; }
 
         /* 플래시카드 인라인 상단 기능바 디자인 */
-        .fc-top-bar { display: flex; gap: 10px; margin-bottom: 15px; }
-        .fc-ctrl-btn { flex: 1; padding: 10px; border: 1px solid #e0e0e0; background: #fff; border-radius: 12px; font-size: 13px; font-weight: bold; cursor: pointer; color: #555; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .fc-top-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
+        .fc-ctrl-btn { flex: 1; padding: 10px; border: 1px solid #e0e0e0; background: #fff; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer; color: #555; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .fc-ctrl-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
 
         /* 플래시카드 메인 영역 */
@@ -178,9 +178,10 @@
 
     <div id="tab-flashcard" class="tab-content">
         <div class="fc-top-bar">
-            <button class="fc-ctrl-btn" id="fc-btn-shuffle"><i class="fa-solid fa-shuffle"></i> 랜덤 섞기</button>
-            <button class="fc-ctrl-btn" id="fc-btn-review-mode"><i class="fa-solid fa-triangle-exclamation"></i> 틀린문장 복습</button>
+            <button class="fc-ctrl-btn" id="fc-btn-shuffle"><i class="fa-solid fa-shuffle"></i> 랜덤</button>
+            <button class="fc-ctrl-btn" id="fc-btn-review-mode"><i class="fa-solid fa-triangle-exclamation"></i> 복습</button>
             <button class="fc-ctrl-btn" id="fc-btn-star-mode"><i class="fa-solid fa-star"></i> 즐겨찾기</button>
+            <button class="fc-ctrl-btn" id="fc-btn-today-mode"><i class="fa-solid fa-calendar-day"></i> 오늘</button>
         </div>
         
         <div class="flashcard-area" id="flashcard-box">
@@ -199,9 +200,7 @@
         <div class="flashcard-action-btns" id="fc-actions">
             <button class="circle-btn btn-x" id="fc-btn-x"><i class="fa-solid fa-xmark"></i></button>
             <button class="circle-btn btn-audio" id="fc-btn-audio"><i class="fa-solid fa-volume-high"></i></button>
-            <button class="circle-btn btn-v" id="fc-btn-v"><i class="fa-solid fa-check"></i></button>
-            <button class="circle-btn btn-edit" id="fc-btn-edit"><i class="fa-solid fa-pen"></i></button>
-        </div>
+            <button class="circle-btn btn-v" id="fc-btn-v"><i class="fa-solid fa-check"></i></button>        </div>
     </div>
 
     <div id="tab-setting" class="tab-content">
@@ -402,7 +401,7 @@
             else break;
         }
         document.getElementById('streak-title').innerText = streak + '일 연속 학습 중!';
-        document.getElementById('streak-sub').innerText = streak > 0 ? streak + '일째 이어가는 중 💪' : '오늘 학습하면 1일 달성';
+        document.getElementById('streak-sub').innerText = '';
         const daysEl = document.getElementById('streak-days');
         daysEl.innerHTML = '';
         for(let i = 6; i >= 0; i--) {
@@ -729,6 +728,7 @@
 
     // --- 5) 플래시카드 기능 고도화 세팅 ---
     let isStarModeActive = false;
+    let isTodayModeActive = false;
 
     function buildFlashcardPool(sourceArray) {
         // 기본 문장 + 연결 문장 모두 포함
@@ -882,23 +882,6 @@
     document.getElementById('fc-btn-v').addEventListener('click', (e) => { e.stopPropagation(); processCardScore('V'); });
     document.getElementById('fc-btn-x').addEventListener('click', (e) => { e.stopPropagation(); processCardScore('X'); });
     document.getElementById('fc-btn-audio').addEventListener('click', (e) => { e.stopPropagation(); if(flashcardPool[currentFlashIndex]) speak(flashcardPool[currentFlashIndex].english); });
-    document.getElementById('fc-btn-edit').addEventListener('click', (e) => { e.stopPropagation(); if(flashcardPool[currentFlashIndex]) openEditModal(flashcardPool[currentFlashIndex]); });
-
-    // --- 상단 툴바 옵션 버튼 이벤트 추가 ---
-    // 랜덤 섞기 스크립트 연동
-    document.getElementById('fc-btn-shuffle').addEventListener('click', () => {
-        if(flashcardPool.length <= 1) return;
-        restoreFcLayout();
-        // 피셔-예이츠 알고리즘 기반 셔플 처리
-        for (let i = flashcardPool.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [flashcardPool[i], flashcardPool[j]] = [flashcardPool[j], flashcardPool[i]];
-        }
-        currentFlashIndex = 0;
-        isCardRevealed = false;
-        document.getElementById('fc-actions').style.display = 'flex';
-        showFlashcard();
-    });
 
     // 상단 틀린문장 수동 복습 전환 토글 버튼
     document.getElementById('fc-btn-review-mode').addEventListener('click', () => {
@@ -936,6 +919,45 @@
             initFlashcard(starredWords);
         } else {
             document.getElementById('fc-btn-star-mode').classList.remove('active');
+            initFlashcard(allWords);
+        }
+    });
+
+
+    // 오늘 추가 문장 모드 버튼
+    document.getElementById('fc-btn-today-mode').addEventListener('click', () => {
+        const todayStr = new Date().toDateString();
+
+        const todayWords = allWords.filter(w => {
+            if(!w.createdAt) return false;
+
+            const d = w.createdAt.toDate
+                ? w.createdAt.toDate()
+                : new Date(w.createdAt);
+
+            return d.toDateString() === todayStr;
+        });
+
+        if(todayWords.length === 0) {
+            alert("오늘 추가한 문장이 없습니다!");
+            return;
+        }
+
+        isTodayModeActive = !isTodayModeActive;
+
+        isReviewModeActive = false;
+        isStarModeActive = false;
+
+        document.getElementById('fc-btn-review-mode').classList.remove('active');
+        document.getElementById('fc-btn-star-mode').classList.remove('active');
+
+        restoreFcLayout();
+
+        if(isTodayModeActive) {
+            document.getElementById('fc-btn-today-mode').classList.add('active');
+            initFlashcard(todayWords);
+        } else {
+            document.getElementById('fc-btn-today-mode').classList.remove('active');
             initFlashcard(allWords);
         }
     });
