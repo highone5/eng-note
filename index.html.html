@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>enclip</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+
+    <!-- Firebase SDK -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyAgzCdilUEDqjh3vFrCiD1ylz-NbtOiwzE",
+        authDomain: "enclip-13188.firebaseapp.com",
+        projectId: "enclip-13188",
+        storageBucket: "enclip-13188.firebasestorage.app",
+        messagingSenderId: "662237406345",
+        appId: "1:662237406345:web:157b27c8e84a640d70d258"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      window._db = db;
+      window._doc = doc;
+      window._getDoc = getDoc;
+      window._setDoc = setDoc;
+
+      // Firebase 준비 완료 신호
+      window.dispatchEvent(new Event('firebase-ready'));
+    </script>
+
+    <style>
+      /* 초기 로딩 */
+      #firebase-loading {
+          position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background: #FAF9F6; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; z-index: 9999; gap: 16px;
+          transition: opacity 0.4s;
+      }
+      #firebase-loading.hide { opacity: 0; pointer-events: none; }
+      #firebase-loading .spinner {
+          width: 36px; height: 36px; border: 3px solid #f2f2f7;
+          border-top-color: #E8745A; border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+      }
+      #firebase-loading p { color: #8E8E93; font-size: 14px; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      :root {
+        --primary-color: #E8745A;
+        --bg-color: #FAF9F6; 
+        --card-bg: #ffffff;
+        --text-main: #1C1C1E; /* iOS System Dark Text */
+        --text-sub: #8E8E93;  /* iOS System Gray */
+        --app-font: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --english-font: "IBM Plex Sans", sans-serif;
+      }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--app-font); -webkit-tap-highlight-color: transparent; }
+        body { background-color: #EFEFEA; color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; }
+        
+        .app-container { width: 100%; max-width: 500px; background: var(--bg-color); min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 25px rgba(0,0,0,0.04); padding-bottom: 90px; }
+        
+        /* 헤더 디자인 */
+        header { padding: 20px; text-align: left; background: #fff; font-size: 24px; font-weight: bold; letter-spacing: 0.5px; cursor: pointer; border-bottom: 1px solid #f2f2f7; }
+        header span { color: var(--primary-color); }
+        
+        /* 탭 화면 제어 */
+        .tab-content { display: none; padding: 20px; flex: 1; }
+        .tab-content.active { display: block; }
+        
+        .dashboard-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 12px; 
+            margin-bottom: 22px; 
+        }
+        /* iOS 스타일의 더 깔끔하고 심플해진 정보 집중형 대시보드 카드 */
+        .dash-card { 
+            background: #fff; 
+            border: 1px solid #f2f2f7; 
+            border-radius: 16px; 
+            padding: 14px 10px; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+        }
+        .dash-card:active {
+            transform: scale(0.96);
+            background-color: #f2f2f7;
+        }
+        .dash-card.active { 
+            border-color: var(--primary-color); 
+            background: #fff;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.02);
+        }
+        .dash-card-label { 
+            font-size: 13px; 
+            font-weight: 700; 
+            color: #48484a; 
+            margin-bottom: 8px;
+        }
+        .dash-card.active .dash-card-label { 
+            color: var(--text-main); 
+        }
+        .dash-card-badge { 
+            display: inline-block; 
+            background: #e5e5ea; 
+            color: #8e8e93; 
+            padding: 2px 10px; 
+            border-radius: 12px; 
+            font-size: 11px; 
+            font-weight: bold; 
+            transition: all 0.2s;
+        }
+        .dash-card.active .dash-card-badge {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .search-box { position: relative; margin-bottom: 20px; }
+        .search-box input { width: 100%; padding: 12px 15px 12px 42px; border: 1px solid #e5e5ea; border-radius: 25px; font-size: 14px; background: #fff; outline: none; transition: border-color 0.2s; }
+        .search-box input:focus { border-color: var(--primary-color); }
+        .search-box i { position: absolute; left: 16px; top: 15px; color: var(--text-sub); font-size: 15px; }
+        
+        /* 문장 카드 스타일 */
+        .word-card { background: #fff; border: 1px solid #f2f2f7; border-radius: 24px; padding: 22px; margin-bottom: 15px; box-shadow: 0 4px 16px rgba(0,0,0,0.015); position: relative; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .card-actions { display: flex; gap: 16px; color: var(--text-sub); cursor: pointer; font-size: 17px; align-items: center; }
+        .card-actions i.fa-star.active { color: #ffca28; }
+        .card-actions i:hover { color: var(--primary-color); }
+        .korean-txt { font-size: 18px; font-weight: 700; margin-bottom: 8px; line-height: 1.4; color: var(--text-main); }
+        
+        .english-blur-box { font-size: 16px; color: var(--text-main); font-weight: normal; font-family: var(--english-font) !important; margin-bottom: 12px; line-height: 1.5; display: block; }
+
+        /* 정렬 칩 */
+        .sort-row { display: flex; gap: 6px; margin-bottom: 14px; }
+        .sort-chip { padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid #e5e5ea; color: var(--text-sub); background: #fff; cursor: pointer; transition: all 0.15s; }
+        .sort-chip.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+
+        /* 연결 문장 리스트 디자인 */
+        .link-section { border-top: 1px dashed #e5e5ea; padding-top: 12px; margin-top: 12px; }
+        .link-item { background: #fafafa; border: 1px solid #f2f2f7; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .link-item .en-txt { font-weight: normal; font-size: 14px; color: var(--text-main); font-family: var(--english-font) !important; }
+        
+        .add-link-btn { color: var(--text-sub); font-size: 12px; cursor: pointer; font-weight: 500; display: inline-block; margin-top: 5px; transition: color 0.2s; }
+        .add-link-btn:hover { color: var(--primary-color); }
+        
+        /* 하단 앱 네비게이션 바 */
+        nav { position: fixed; bottom: 0; width: 100%; max-width: 500px; background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-top: 0.5px solid #d1d1d6; display: flex; justify-content: space-around; padding: 10px 0 14px; z-index: 10; }
+        .nav-item { text-align: center; color: var(--text-sub); cursor: pointer; font-size: 11px; flex: 1; transition: color 0.2s; }
+        .nav-item.active { color: var(--primary-color); }
+        .nav-item i { font-size: 21px; margin-bottom: 4px; display: block; }
+        
+        /* 플로팅 액션 우측 버튼 (+) */
+        .fab { position: fixed; right: calc(50% - 250px + 20px); bottom: 75px; width: 56px; height: 56px; background: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; cursor: pointer; box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08); z-index: 20; transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        @media (max-width: 500px) { .fab { right: 20px; } }
+        .fab:active { transform: scale(0.9); }
+        
+        /* 공용 바텀시트 모달 팝업 구조 */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); justify-content: center; align-items: center; z-index: 100; }
+        .modal-content { background: white; width: 90%; max-width: 440px; border-radius: 28px; padding: 28px 22px; animation: iosSpringIn 0.35s cubic-bezier(0.16, 1, 0.3, 1); max-height: 85vh; overflow-y: auto; }
+        @keyframes iosSpringIn { from { opacity: 0; transform: scale(0.92) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #48484a; }
+        .form-group input { width: 100%; padding: 13px; border: 1px solid #e5e5ea; border-radius: 12px; background: #f2f2f7; font-size: 15px; outline: none; transition: border-color 0.2s; }
+        .form-group input:focus { border-color: var(--primary-color); background: #fff; }
+        
+        .modal-btns { display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
+        /* 일률적이고 깔끔한 그레이 톤으로 정렬된 iOS 알림형 버튼 가이드 적용 */
+        .btn { flex: 1; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; border: none; cursor: pointer; text-align: center; min-width: 80px; transition: background-color 0.2s, transform 0.1s; }
+        .btn:active { transform: scale(0.97); }
+        .btn-cancel { background: #f2f2f7; color: #3a3a3c; }
+        .btn-cancel:hover { background: #e5e5ea; }
+        .btn-submit { background: var(--primary-color); color: white; }
+
+        /* 플래시카드 상단 기능바 */
+        .fc-top-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+        .fc-ctrl-btn { 
+            flex: 1; 
+            padding: 10px; 
+            border: 1px solid #e5e5ea; 
+            background: #fff; 
+            border-radius: 12px; 
+            font-size: 13px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            color: #48484a; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 6px; 
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        .fc-ctrl-btn:active {
+            transform: scale(0.96);
+        }
+        /* 일시적 색상 페이드 아웃 전용 키프레임 및 클래스 세팅 */
+        .fc-ctrl-btn.btn-flash-active {
+            background: var(--primary-color) !important;
+            color: #ffffff !important;
+            border-color: var(--primary-color) !important;
+            transform: scale(0.95);
+        }
+
+        /* 인라인 토스트 */
+        .inline-toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.88); background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 24px; padding: 22px 30px; text-align: center; box-shadow: 0 12px 36px rgba(0,0,0,0.12); z-index: 9999; opacity: 0; transition: opacity 0.25s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; min-width: 250px; }
+        .inline-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .inline-toast .it-emoji { font-size: 32px; margin-bottom: 10px; display: block; }
+        .inline-toast .it-msg { font-size: 15px; font-weight: bold; color: var(--text-main); line-height: 1.6; }
+
+        /* 📱 추천: iOS 프리미엄 네이티브 스타일 플래시카드 & 최적화 패스 버튼 시스템 */
+        .flashcard-area { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 370px; 
+            background: rgba(255, 255, 255, 0.75); 
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(0, 0, 0, 0.08); 
+            border-radius: 32px; 
+            margin-bottom: 25px; 
+            cursor: pointer; 
+            padding: 35px; 
+            text-align: center; 
+            position: relative; 
+            box-shadow: 0 12px 36px rgba(0,0,0,0.03), 0 2px 8px rgba(0,0,0,0.015); 
+            user-select: none; 
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease; 
+        }
+        .flashcard-area:active { 
+            transform: scale(0.98); 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+        }
+        
+        .flashcard-action-btns { display: flex; justify-content: center; gap: 32px; width: 100%; margin-top: 5px; align-items: center; }
+
+        .circle-btn {
+            width: 52px;
+            height: 52px;
+            background: none;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 0;
+        }
+        .circle-btn:active { transform: scale(0.85); }
+
+        .circle-btn.btn-x  { color: #FF3B30; }
+        .circle-btn.btn-v  { color: #34C759; }
+        .circle-btn.btn-audio { color: #8E8E93; }
+
+        .circle-btn.btn-x i,
+        .circle-btn.btn-v i,
+        .circle-btn.btn-audio i { font-size: 32px; }
+
+        /* 결과 창 패널 스타일 */
+        .result-panel { text-align: center; padding: 20px 10px; }
+        .result-score { font-size: 46px; font-weight: bold; color: var(--primary-color); margin: 15px 0; letter-spacing: -1px; }
+
+        /* 설정 탭 섹션 */
+        .settings-section { background: #fff; border: 1px solid #f2f2f7; border-radius: 24px; padding: 22px; margin-bottom: 20px; }
+        .settings-section h3 { font-size: 15px; color: #3a3a3c; margin-bottom: 15px; font-weight: bold; }
+        .color-picker { display: flex; flex-wrap: wrap; gap: 15px; }
+        .color-dot { width: 38px; height: 38px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.2s; }
+        .color-dot.active { border-color: #333; transform: scale(1.1); }
+        .color-name { font-size: 11px; color: var(--text-sub); text-align: center; margin-top: 4px; display: block; }
+        
+        .english-blur-box, .en-txt {
+            font-family: var(--english-font) !important;
+        }
+    </style>
+</head>
+<body>
+
+<div id="firebase-loading">
+    <div class="spinner"></div>
+    <p>데이터를 불러오는 중...</p>
+</div>
+<div class="app-container">
+    <header id="app-logo">en<span>clip</span></header>
+
+    <!-- 홈화면 탭 -->
+    <div id="tab-home" class="tab-content active">
+        <!-- 대시보드 그리드 영역 (전체/오늘/즐겨찾기 카드 이모티콘 및 아이콘 제거 완성 버전) -->
+        <div class="dashboard-grid">
+            <div class="dash-card active" id="chip-all">
+                <span class="dash-card-label">전체</span>
+                <span class="dash-card-badge" id="count-all">0</span>
+            </div>
+            <div class="dash-card" id="chip-today">
+                <span class="dash-card-label">오늘</span>
+                <span class="dash-card-badge" id="count-today">0</span>
+            </div>
+            <div class="dash-card" id="chip-star">
+                <span class="dash-card-label">즐겨찾기</span>
+                <span class="dash-card-badge" id="count-star">0</span>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search-input" placeholder="영어 또는 한국어로 검색">
+        </div>
+        <div class="sort-row">
+            <div class="sort-chip active" id="sort-newest">최신순</div>
+            <div class="sort-chip" id="sort-oldest">오래된순</div>
+        </div>
+        <div id="word-list-container"></div>
+    </div>
+
+    <!-- 플래시카드 탭 (전체 / 랜덤 / 즐겨찾기 3버튼 구성 및 iOS 페이드인 피드백 이식) -->
+    <div id="tab-flashcard" class="tab-content">
+        <div class="fc-top-bar">
+            <button class="fc-ctrl-btn" id="fc-btn-all">전체</button>
+            <button class="fc-ctrl-btn" id="fc-btn-shuffle"><i class="fa-solid fa-shuffle" style="font-size:11px;"></i> 랜덤</button>
+            <button class="fc-ctrl-btn" id="fc-btn-star-mode"><i class="fa-solid fa-star" style="color: #ffca28; font-size:11px;"></i> 즐겨찾기</button>
+        </div>
+        
+        <div class="flashcard-area" id="flashcard-box">
+            <span style="position: absolute; top: 16px; right: 22px; display:flex; align-items:center; gap:8px;">
+                <i class="fa-regular fa-star" id="fc-star-btn" style="color:var(--text-sub); font-size:18px; cursor:pointer;"></i>
+                <span id="fc-progress" style="color: var(--text-sub); font-size: 13px; font-weight: 600;">0 / 0</span>
+            </span>
+            
+            <div id="fc-main-content" style="width:100%;">
+                <h2 id="fc-korean" style="font-size: 22px; color: var(--text-main); font-weight: 700; word-break: keep-all; margin-bottom: 15px; padding: 0 10px; line-height: 1.45;">저장된 문장이 없습니다.</h2>
+                <h3 id="fc-english" style="font-size: 19px; color: var(--primary-color); font-weight: bold; font-family: var(--english-font); display: none; padding: 0 10px; word-break: normal; overflow-wrap: break-word; word-wrap: break-word; line-height: 1.4;"></h3>
+            </div>
+        </div>
+        
+        <div class="flashcard-action-btns" id="fc-actions">
+            <button class="circle-btn btn-x" id="fc-btn-x"><i class="fa-solid fa-xmark"></i></button>
+            <button class="circle-btn btn-audio" id="fc-btn-audio"><i class="fa-solid fa-volume-high"></i></button>
+            <button class="circle-btn btn-v" id="fc-btn-v"><i class="fa-solid fa-check"></i></button>
+        </div>
+    </div>
+
+    <!-- 설정 탭 -->
+    <div id="tab-setting" class="tab-content">
+        <!-- 테마 설정 -->
+        <div class="settings-section">
+            <h3>테마</h3>
+            <div id="sec-theme">
+                <div class="color-picker" style="flex-wrap: nowrap; justify-content: space-between; margin-bottom: 0;">
+                    <div style="text-align:center;"><div class="color-dot" style="background: #E8745A;" data-color="#E8745A"></div><span class="color-name">오렌지</span></div>
+                    <div style="text-align:center;"><div class="color-dot" style="background: #4E6BAD;" data-color="#4E6BAD"></div><span class="color-name">블루</span></div>
+                    <div style="text-align:center;"><div class="color-dot" style="background: #6b5fb5;" data-color="#6b5fb5"></div><span class="color-name">퍼플</span></div>
+                    <div style="text-align:center;"><div class="color-dot" style="background: #5C9BA8;" data-color="#5C9BA8"></div><span class="color-name">틸</span></div>
+                    <div style="text-align:center;"><div class="color-dot" style="background: #5A8A6F;" data-color="#5A8A6F"></div><span class="color-name">포레스트</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>데이터 동기화 관리</h3>
+            <div style="background: #ffffff; border: 1px solid #f2f2f7; border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 700; font-size: 15px; color: var(--text-main); margin-bottom: 4px;">클라우드 데이터베이스 상태</div>
+                    <div style="font-size: 12px; color: var(--text-sub);">Firebase Firestore 실시간 연결됨</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; color: #34C759; font-weight: bold; font-size: 14px;">
+                    <i class="fa-solid fa-circle-check" style="font-size: 18px;"></i>
+                    <span>정상</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 플로팅 플러스 버튼 -->
+    <div class="fab" id="open-add-modal"><i class="fa-solid fa-plus"></i></div>
+
+    <!-- 인앱 토스트 팝업 -->
+    <div class="inline-toast" id="inline-toast">
+        <span class="it-emoji" id="inline-toast-emoji">⭐</span>
+        <div class="it-msg" id="inline-toast-msg">메시지</div>
+    </div>
+
+    <!-- 새 문장 추가 모달 -->
+    <div class="modal" id="add-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">새 문장 추가</h3>
+            <div class="form-group">
+                <label>한국어 문장</label>
+                <input type="text" id="input-korean" placeholder="한국어 문장을 입력하세요">
+            </div>
+            <div class="form-group">
+                <label>영어 문장</label>
+                <input type="text" id="input-english" placeholder="영어 문장을 입력하세요">
+            </div>
+            <div class="form-group">
+                <label>메모 (선택)</label>
+                <input type="text" id="input-memo" placeholder="예: 격식체, 비즈니스용...">
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-cancel" id="close-add-modal">취소</button>
+                <button class="btn btn-submit" id="btn-save-word">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 문장 수정 모달 (모든 행동 버튼을 닫기 버튼 색상과 동일하게 심플화) -->
+    <div class="modal" id="edit-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">문장 관리</h3>
+            <input type="hidden" id="edit-word-id">
+            <div class="form-group">
+                <label>한국어 문장</label>
+                <input type="text" id="edit-korean">
+            </div>
+            <div class="form-group">
+                <label>영어 문장</label>
+                <input type="text" id="edit-english">
+            </div>
+            <div class="form-group">
+                <label>메모</label>
+                <input type="text" id="edit-memo">
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-cancel" id="btn-edit-submit">수정</button>
+                <button class="btn btn-cancel" id="btn-edit-delete">삭제</button>
+                <button class="btn btn-cancel" id="close-edit-modal">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 연관 문장 추가 모달 -->
+    <div class="modal" id="link-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">문장 추가</h3>
+            <input type="hidden" id="link-parent-id">
+            <div class="form-group">
+                <label>한국어 문장</label>
+                <input type="text" id="link-korean" placeholder="한국어 문장을 입력하세요">
+            </div>
+            <div class="form-group">
+                <label>영어 문장</label>
+                <input type="text" id="link-english" placeholder="영어 문장을 입력하세요">
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-cancel" id="close-link-modal">취소</button>
+                <button class="btn btn-submit" id="btn-save-link">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 연관 문장 관리 모달 (모든 행동 버튼을 닫기 버튼 색상과 동일하게 그레이 톤 처리) -->
+    <div class="modal" id="link-edit-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 20px; font-size: 20px;">추가 문장 관리</h3>
+            <input type="hidden" id="link-edit-parent-id">
+            <input type="hidden" id="link-edit-created-at">
+            <div class="form-group">
+                <label>한국어 문장</label>
+                <input type="text" id="link-edit-korean" placeholder="한국어 문장">
+            </div>
+            <div class="form-group">
+                <label>영어 문장</label>
+                <input type="text" id="link-edit-english" placeholder="English sentence">
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-cancel" id="btn-link-edit-submit">수정</button>
+                <button class="btn btn-cancel" id="btn-link-edit-delete">삭제</button>
+                <button class="btn btn-cancel" id="close-link-edit-modal">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 하단 탭 내비게이션 -->
+    <nav>
+        <div class="nav-item active" data-tab="tab-home"><i class="fa-solid fa-house"></i>홈</div>
+        <div class="nav-item" data-tab="tab-flashcard"><i class="fa-solid fa-id-card"></i>플래시카드</div>
+        <div class="nav-item" data-tab="tab-setting"><i class="fa-solid fa-gear"></i>설정</div>
+    </nav>
+</div>
+
+<script>
+    // ── 고정 문서 키 (이 앱의 데이터가 저장될 Firestore 경로) ──
+    const FIRESTORE_DOC = 'my-enclip';
+    const STORAGE_KEY = 'eng-note-words'; // 오프라인 폴백용
+
+    async function loadWordsFromFirebase() {
+        try {
+            const docRef = window._doc(window._db, 'enclip', FIRESTORE_DOC);
+            const snap = await window._getDoc(docRef);
+            if (snap.exists()) return snap.data().words || [];
+            return [];
+        } catch(e) {
+            console.warn('Firebase 읽기 실패, 로컬 데이터 사용:', e);
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+        }
+    }
+
+    async function saveWords(words) {
+        allWords = words;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(words)); } catch {}
+        try {
+            const docRef = window._doc(window._db, 'enclip', FIRESTORE_DOC);
+            await window._setDoc(docRef, { words: words });
+        } catch(e) {
+            console.warn('Firebase 저장 실패, 로컬에만 저장됨:', e);
+        }
+        updateDashboardCounts();
+    }
+
+    function generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    }
+
+    let allWords = [];
+    let flashcardPool = []; 
+    let currentFlashIndex = 0;
+    let isCardRevealed = false; 
+    let currentFilter = 'all';
+    let currentSort = 'newest';
+
+    // 플래시카드 상태 보존 관리 변수
+    let currentFcDataset = 'all'; // 'all' | 'star'
+
+    let scoreVCount = 0;
+    let scoreXCount = 0;
+    let wrongWordsIds = []; 
+    let isReviewModeActive = false;
+
+    // --- 시스템 초기화 세팅 (테마 컬러 및 폰트 불러오기) ---
+    let savedColor = localStorage.getItem('eng-note-theme-color') || '#E8745A';
+    document.documentElement.style.setProperty('--primary-color', savedColor);
+    document.querySelectorAll('.color-dot').forEach(dot => {
+        if(dot.getAttribute('data-color') === savedColor) dot.classList.add('active');
+        dot.addEventListener('click', () => {
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+            dot.classList.add('active');
+            const targetColor = dot.getAttribute('data-color');
+            document.documentElement.style.setProperty('--primary-color', targetColor);
+            localStorage.setItem('eng-note-theme-color', targetColor);
+        });
+    });
+
+    function updateDashboardCounts() {
+        const words = allWords;
+        const allCount = words.length;
+
+        const todayStr = new Date().toDateString();
+        const todayCount = words.filter(w => {
+            if(!w.createdAt) return false;
+            const d = parseDate(w.createdAt);
+            return d.toDateString() === todayStr;
+        }).length;
+
+        const starCount = words.filter(w => w.starred === true).length;
+
+        document.getElementById('count-all').innerText = allCount;
+        document.getElementById('count-today').innerText = todayCount;
+        document.getElementById('count-star').innerText = starCount;
+    }
+
+    // 대시보드 필터 칩 (전체 / 오늘 / 즐겨찾기)
+    function setActiveChip(id) {
+        ['chip-all','chip-today','chip-star'].forEach(c => document.getElementById(c).classList.remove('active'));
+        document.getElementById('chip-' + id).classList.add('active');
+    }
+    function setActiveSortChip(id) {
+        ['sort-newest','sort-oldest'].forEach(c => document.getElementById(c).classList.remove('active'));
+        document.getElementById('sort-' + id).classList.add('active');
+    }
+
+    document.getElementById('chip-all').addEventListener('click', () => {
+        currentFilter = 'all'; setActiveChip('all'); applyFilter();
+    });
+    document.getElementById('chip-today').addEventListener('click', () => {
+        currentFilter = 'today'; setActiveChip('today'); applyFilter();
+    });
+    document.getElementById('chip-star').addEventListener('click', () => {
+        currentFilter = 'star'; setActiveChip('star'); applyFilter();
+    });
+    document.getElementById('sort-newest').addEventListener('click', () => {
+        currentSort = 'newest'; setActiveSortChip('newest'); applyFilter();
+    });
+    document.getElementById('sort-oldest').addEventListener('click', () => {
+        currentSort = 'oldest'; setActiveSortChip('oldest'); applyFilter();
+    });
+
+    document.getElementById('app-logo').addEventListener('click', () => {
+        document.getElementById('search-input').value = '';
+        currentFilter = 'all';
+        currentSort = 'newest';
+        setActiveChip('all');
+        setActiveSortChip('newest');
+        switchTab('tab-home');
+        renderWordList(allWords);
+    });
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        
+        const activeNav = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+        if(activeNav) activeNav.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+
+        const fab = document.getElementById('open-add-modal');
+        if(tabId === 'tab-flashcard') {
+            fab.style.display = 'none';
+            isReviewModeActive = false;
+            wrongWordsIds = [];
+            currentFcDataset = 'all'; // 전체 문장 디폴트화
+            restoreFcLayout();
+            document.getElementById('fc-actions').style.display = 'flex';
+            
+            // 최초 로드 시 최신순 정렬하여 로드
+            const sortedWords = [...allWords].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+            initFlashcard(sortedWords);
+        } else if(tabId === 'tab-setting') {
+            fab.style.display = 'none';
+        } else if(tabId === 'tab-home') {
+            fab.style.display = 'flex';
+        } else {
+            fab.style.display = 'none';
+        }
+    }
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const tabId = item.getAttribute('data-tab');
+            if(tabId === 'tab-home') {
+                document.getElementById('search-input').value = '';
+                currentFilter = 'all';
+                currentSort = 'newest';
+                setActiveChip('all');
+                setActiveSortChip('newest');
+                switchTab('tab-home');
+                renderWordList(allWords);
+            } else {
+                switchTab(tabId);
+            }
+        });
+    });
+
+    // 모달 제어 바인딩
+    const addModal = document.getElementById('add-modal');
+    document.getElementById('open-add-modal').addEventListener('click', () => addModal.style.display = 'flex');
+    document.getElementById('close-add-modal').addEventListener('click', () => addModal.style.display = 'none');
+    
+    const editModal = document.getElementById('edit-modal');
+    document.getElementById('close-edit-modal').addEventListener('click', () => editModal.style.display = 'none');
+
+    const linkEditModal = document.getElementById('link-edit-modal');
+    document.getElementById('close-link-edit-modal').addEventListener('click', () => linkEditModal.style.display = 'none');
+
+    const linkModal = document.getElementById('link-modal');
+    document.getElementById('close-link-modal').addEventListener('click', () => linkModal.style.display = 'none');
+
+    document.getElementById('btn-link-edit-submit').addEventListener('click', () => {
+        const parentId = document.getElementById('link-edit-parent-id').value;
+        const createdAt = parseInt(document.getElementById('link-edit-created-at').value);
+        const newKorean = document.getElementById('link-edit-korean').value.trim();
+        const newEnglish = document.getElementById('link-edit-english').value.trim();
+        if(!newKorean || !newEnglish) return alert("내용을 입력해 주세요.");
+        const parentWord = allWords.find(w => w.id === parentId);
+        if(!parentWord) return;
+        parentWord.links = parentWord.links.map(l => l.createdAt === createdAt ? { ...l, korean: newKorean, english: newEnglish } : l);
+        saveWords(allWords);
+        refreshFromStorage();
+        linkEditModal.style.display = 'none';
+    });
+
+    document.getElementById('btn-link-edit-delete').addEventListener('click', () => {
+        const parentId = document.getElementById('link-edit-parent-id').value;
+        const createdAt = parseInt(document.getElementById('link-edit-created-at').value);
+        const parentWord = allWords.find(w => w.id === parentId);
+        if(!parentWord) return;
+        parentWord.links = parentWord.links.filter(l => l.createdAt !== createdAt);
+        saveWords(allWords);
+        refreshFromStorage();
+        linkEditModal.style.display = 'none';
+    });
+
+    // TTS 음성 출력 엔진
+    function speak(text) {
+        if (!window.speechSynthesis) return;
+        const cleanText = text.replace(/\s*\/\s*/g, ' ').trim();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = 'en-US';
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function refreshFromStorage() {
+        applyFilter();
+        updateDashboardCounts();
+    }
+
+    function parseDate(createdAt) {
+        if(!createdAt) return null;
+        if(createdAt.toDate) return createdAt.toDate();
+        return new Date(createdAt);
+    }
+
+    function applyFilter() {
+        let filtered = [...allWords];
+        if(currentFilter === 'today') {
+            const todayStr = new Date().toDateString();
+            filtered = allWords.filter(w => {
+                if(!w.createdAt) return false;
+                const d = parseDate(w.createdAt);
+                return d.toDateString() === todayStr;
+            });
+        } else if(currentFilter === 'star') {
+            filtered = allWords.filter(w => w.starred === true);
+        }
+        if(currentSort === 'oldest') {
+            filtered = filtered.slice().reverse();
+        }
+        renderWordList(filtered);
+    }
+
+    // 메인화면 리스트 동적 UI 렌더링
+    function renderWordList(words) {
+        const container = document.getElementById('word-list-container');
+        container.innerHTML = '';
+
+        if(words.length === 0) {
+            if(allWords.length === 0 && currentFilter === 'all' && !document.getElementById('search-input').value.trim()) {
+                container.innerHTML = `
+                    <div style="text-align:center; color:var(--text-sub); margin-top: 80px; font-size:14px; line-height:1.7;">
+                        <div style="font-weight:700; color:var(--text-main); margin-bottom:6px;">아직 저장된 문장이 없어요</div>
+                    </div>`;
+            } else {
+                container.innerHTML = `<p style="text-align:center; color:var(--text-sub); margin-top:40px; font-size:14px;">조건에 맞는 문장이 없습니다.</p>`;
+            }
+            return;
+        }
+
+        words.forEach(word => {
+            const card = document.createElement('div');
+            card.className = 'word-card';
+            
+            let linksHtml = '';
+            if(word.links && word.links.length > 0) {
+                linksHtml = `<div class="link-section">`;
+                word.links.forEach(link => {
+                    linksHtml += `
+                        <div class="link-item">
+                            <div>
+                                <strong style="font-size:15px; display:block; margin-bottom:2px;">${link.korean}</strong>
+                                <span class="en-txt">${link.english}</span>
+                            </div>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <i class="fa-solid fa-volume-high" style="color:var(--text-sub); cursor:pointer; font-size:16px;" id="link-audio-${word.id}-${link.createdAt}"></i>
+                                <i class="fa-solid fa-ellipsis" style="color:var(--text-sub); cursor:pointer; font-size:16px;" id="link-menu-${word.id}-${link.createdAt}"></i>
+                            </div>
+                        </div>`;
+                });
+                linksHtml += `</div>`;
+            }
+
+            const isStarred = word.starred === true;
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <span></span>
+                    <div class="card-actions" style="margin-left:auto;">
+                        <i class="fa-star ${isStarred ? 'fa-solid active' : 'fa-regular'}" id="star-${word.id}"></i>
+                        <i class="fa-solid fa-volume-high" id="audio-${word.id}"></i>
+                        <i class="fa-solid fa-ellipsis" id="menu-${word.id}"></i>
+                    </div>
+                </div>
+                <div class="korean-txt">${word.korean}</div>
+                <div>
+                    <div class="english-blur-box" id="en-box-${word.id}">${word.english}</div>
+                </div>
+                <div style="font-size:13px; color:var(--text-sub); margin-bottom:5px; padding-top:${word.memo ? '8px' : '0'}; border-top:${word.memo ? '1px dashed #eee' : 'none'}; margin-top:${word.memo ? '8px' : '0'};">${word.memo ? word.memo : ''}</div>
+                ${linksHtml}
+                <div class="add-link-btn" id="add-link-${word.id}">+ 더하기</div>
+            `;
+
+            container.appendChild(card);
+
+            const addLinkBtn = card.querySelector(`#add-link-${word.id}`);
+            addLinkBtn.style.fontSize = "12px";
+            addLinkBtn.style.color = "var(--text-sub)";
+
+            card.querySelector(`#star-${word.id}`).addEventListener('click', (e) => {
+                e.stopPropagation();
+                const target = allWords.find(w => w.id === word.id);
+                if(target) { target.starred = !target.starred; saveWords(allWords); refreshFromStorage(); }
+            });
+
+            card.querySelector(`#audio-${word.id}`).addEventListener('click', (e) => { e.stopPropagation(); speak(word.english); });
+            card.querySelector(`#menu-${word.id}`).addEventListener('click', (e) => { e.stopPropagation(); openEditModal(word); });
+
+            if(word.links && word.links.length > 0) {
+                word.links.forEach(link => {
+                    const btn = card.querySelector(`#link-audio-${word.id}-${link.createdAt}`);
+                    if(btn) btn.addEventListener('click', (e) => { e.stopPropagation(); speak(link.english); });
+
+                    const menuBtn = card.querySelector(`#link-menu-${word.id}-${link.createdAt}`);
+                    if(menuBtn) menuBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        document.getElementById('link-edit-parent-id').value = word.id;
+                        document.getElementById('link-edit-created-at').value = link.createdAt;
+                        document.getElementById('link-edit-korean').value = link.korean;
+                        document.getElementById('link-edit-english').value = link.english;
+                        document.getElementById('link-edit-modal').style.display = 'flex';
+                    });
+                });
+            }
+
+            addLinkBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('link-parent-id').value = word.id;
+                document.getElementById('link-korean').value = '';
+                document.getElementById('link-english').value = '';
+                linkModal.style.display = 'flex';
+            });
+        });
+    }
+
+    function openEditModal(word) {
+        document.getElementById('edit-word-id').value = word.id;
+        document.getElementById('edit-korean').value = word.korean;
+        document.getElementById('edit-english').value = word.english;
+        document.getElementById('edit-memo').value = word.memo || '';
+        editModal.style.display = 'flex';
+    }
+
+    document.getElementById('btn-edit-submit').addEventListener('click', () => {
+        const id = document.getElementById('edit-word-id').value;
+        const uKorean = document.getElementById('edit-korean').value.trim();
+        const uEnglish = document.getElementById('edit-english').value.trim();
+        const uMemo = document.getElementById('edit-memo').value.trim();
+        if(!uKorean || !uEnglish) return alert("내용을 채워주세요.");
+        const target = allWords.find(w => w.id === id);
+        if(target) { target.korean = uKorean; target.english = uEnglish; target.memo = uMemo; saveWords(allWords); refreshFromStorage(); }
+        editModal.style.display = 'none';
+    });
+
+    document.getElementById('btn-edit-delete').addEventListener('click', () => {
+        const id = document.getElementById('edit-word-id').value;
+        if(confirm("이 문장을 완전히 삭제할까요?")) {
+            allWords = allWords.filter(w => w.id !== id);
+            saveWords(allWords);
+            refreshFromStorage();
+            editModal.style.display = 'none';
+        }
+    });
+
+    document.getElementById('btn-save-word').addEventListener('click', () => {
+        const korean = document.getElementById('input-korean').value.trim();
+        const english = document.getElementById('input-english').value.trim();
+        const memo = document.getElementById('input-memo').value.trim();
+
+        if(!korean || !english) return alert("한국어와 영어 문장을 모두 입력해 주세요.");
+
+        const newWord = {
+            id: generateId(),
+            korean: korean,
+            english: english,
+            memo: memo,
+            links: [],
+            starred: false,
+            createdAt: new Date().toISOString()
+        };
+        allWords.unshift(newWord);
+        saveWords(allWords);
+        refreshFromStorage();
+
+        document.getElementById('input-korean').value = '';
+        document.getElementById('input-english').value = '';
+        document.getElementById('input-memo').value = '';
+        document.getElementById('input-korean').focus();
+
+        // 팝업은 유지, 토스트 메시지만 표시
+        showInlineToast('✅', '문장이 추가되었습니다', 1000);
+    });
+
+    document.getElementById('btn-save-link').addEventListener('click', () => {
+        const parentId = document.getElementById('link-parent-id').value;
+        const lKorean = document.getElementById('link-korean').value.trim();
+        const lEnglish = document.getElementById('link-english').value.trim();
+
+        if(!lKorean || !lEnglish) return alert("내용을 입력해 주세요.");
+
+        const parentWord = allWords.find(w => w.id === parentId);
+        if(!parentWord) return;
+        if(!parentWord.links) parentWord.links = [];
+        parentWord.links.push({ korean: lKorean, english: lEnglish, createdAt: new Date().getTime(), inFlashcard: true });
+        saveWords(allWords);
+        refreshFromStorage();
+        linkModal.style.display = 'none';
+    });
+
+    function buildFlashcardPool(sourceArray) {
+        const pool = [];
+        sourceArray.forEach(word => {
+            pool.push({ id: word.id, korean: word.korean, english: word.english, starred: word.starred });
+            if(word.links && word.links.length > 0) {
+                word.links.forEach(link => {
+                    if(link.inFlashcard === false) return;
+                    pool.push({ id: word.id + '_link_' + link.createdAt, korean: link.korean, english: link.english, starred: word.starred, isLink: true });
+                });
+            }
+        });
+        return pool;
+    }
+
+    function initFlashcard(sourceArray) {
+        flashcardPool = buildFlashcardPool(sourceArray);
+        currentFlashIndex = 0;
+        isCardRevealed = false;
+        scoreVCount = 0;
+        scoreXCount = 0;
+        wrongWordsIds = [];
+        
+        document.getElementById('fc-actions').style.display = 'flex';
+        showFlashcard();
+    }
+
+    function showFlashcard() {
+        const koreanEl = document.getElementById('fc-korean');
+        const englishEl = document.getElementById('fc-english');
+        const progEl = document.getElementById('fc-progress');
+
+        if(flashcardPool.length === 0) {
+            koreanEl.innerHTML = isReviewModeActive ? "👏 틀린 문장 복습이 완료되었습니다!" : "저장된 문장이 없습니다. 홈에서 추가해 보세요!";
+            englishEl.style.display = "none";
+            progEl.innerText = "0 / 0";
+            document.getElementById('fc-actions').style.display = 'none';
+            return;
+        }
+
+        const currentWord = flashcardPool[currentFlashIndex];
+        progEl.innerText = `${currentFlashIndex + 1} / ${flashcardPool.length}`;
+        koreanEl.innerText = currentWord.korean;
+        englishEl.innerText = currentWord.english;
+
+        const fcStarBtn = document.getElementById('fc-star-btn');
+        const baseWordId = currentWord.id.split('_link_')[0];
+        const baseWord = allWords.find(w => w.id === baseWordId);
+        const isStarred = baseWord ? baseWord.starred === true : false;
+        if(isStarred) {
+            fcStarBtn.className = 'fa-solid fa-star';
+            fcStarBtn.style.color = '#ffca28';
+        } else {
+            fcStarBtn.className = 'fa-regular fa-star';
+            fcStarBtn.style.color = 'var(--text-sub)';
+        }
+        fcStarBtn.id = 'fc-star-btn';
+
+        if(isCardRevealed) {
+            englishEl.style.display = "block";
+        } else {
+            englishEl.style.display = "none";
+        }
+    }
+
+    document.getElementById('flashcard-box').addEventListener('click', () => {
+        if(flashcardPool.length === 0 || currentFlashIndex >= flashcardPool.length) return;
+        isCardRevealed = !isCardRevealed;
+        showFlashcard();
+    });
+
+    function processCardScore(status) {
+        if(flashcardPool.length === 0) return;
+        const currentWord = flashcardPool[currentFlashIndex];
+
+        if(status === 'V') {
+            scoreVCount++;
+        } else {
+            scoreXCount++;
+            const baseId = currentWord.id.split('_link_')[0];
+            if(!wrongWordsIds.includes(baseId)) {
+                wrongWordsIds.push(baseId);
+            }
+        }
+
+        if(currentFlashIndex + 1 >= flashcardPool.length) {
+            renderFinalReport();
+        } else {
+            currentFlashIndex++;
+            isCardRevealed = false;
+            showFlashcard();
+        }
+    }
+
+    // 최종 결과 학습 통계 리포트 화면
+    function renderFinalReport() {
+        const mainContent = document.getElementById('fc-main-content');
+        document.getElementById('fc-actions').style.display = 'none';
+        document.getElementById('fc-progress').style.display = 'none';
+        document.getElementById('fc-star-btn').style.display = 'none';
+        document.getElementById('fc-progress').innerText = "완료";
+
+        const currentRoundWrongIds = [...wrongWordsIds];
+
+        let reviewBtnHtml = '';
+        if(currentRoundWrongIds.length > 0) {
+            reviewBtnHtml = `<button class="btn btn-submit" id="btn-start-wrong-review" style="margin-top:15px; width:100%;">틀린 문장 복습하기</button>`;
+        }
+
+        mainContent.innerHTML = `
+            <div class="result-panel">
+                <h3 style="font-size:20px; color:#333;">학습 완료</h3>
+                <div class="result-score">${scoreVCount} <span style="font-size:20px; color:#555;">정답</span> / ${scoreXCount} <span style="font-size:20px; color:#555;">오답</span></div>
+                ${reviewBtnHtml}
+                <button class="btn btn-cancel" id="btn-fc-reset-all" style="margin-top:10px; width:100%;">처음부터 다시 학습</button>
+            </div>
+        `;
+
+        if(currentRoundWrongIds.length > 0) {
+            document.getElementById('btn-start-wrong-review').addEventListener('click', (e) => {
+                e.stopPropagation();
+                isReviewModeActive = true;
+                wrongWordsIds = []; // 새 복습 라운드 시작 전 초기화
+                scoreVCount = 0;
+                scoreXCount = 0;
+                restoreFcLayout();
+                // currentRoundWrongIds 기준으로 필터 (allWords의 links 포함)
+                const filteredWrong = allWords.filter(w => currentRoundWrongIds.includes(w.id));
+                initFlashcard(filteredWrong);
+            });
+        }
+
+        document.getElementById('btn-fc-reset-all').addEventListener('click', (e) => {
+            e.stopPropagation();
+            isReviewModeActive = false;
+            wrongWordsIds = [];
+            restoreFcLayout();
+            initFlashcard(allWords);
+        });
+    }
+
+    function restoreFcLayout() {
+        const mainContent = document.getElementById('fc-main-content');
+        isCardRevealed = false;
+        const starBtn = document.getElementById('fc-star-btn');
+        if(starBtn) { starBtn.style.display = 'inline'; starBtn.className = 'fa-regular fa-star'; starBtn.style.color = 'var(--text-sub)'; starBtn.id = 'fc-star-btn'; }
+        const progEl = document.getElementById('fc-progress');
+        if(progEl) { progEl.style.display = 'inline'; }
+        mainContent.innerHTML = `
+            <h2 id="fc-korean" style="font-size: 22px; color: var(--text-main); font-weight: 700; word-break: keep-all; margin-bottom: 15px; padding: 0 10px; line-height: 1.45;"></h2>
+            <h3 id="fc-english" style="font-size: 19px; color: var(--primary-color); font-weight: bold; font-family: var(--english-font); display: none; padding: 0 10px; word-break: normal; overflow-wrap: break-word; word-wrap: break-word; line-height: 1.4;"></h3>
+        `;
+    }
+
+    document.getElementById('fc-btn-v').addEventListener('click', (e) => { e.stopPropagation(); processCardScore('V'); });
+    document.getElementById('fc-btn-x').addEventListener('click', (e) => { e.stopPropagation(); processCardScore('X'); });
+    document.getElementById('fc-btn-audio').addEventListener('click', (e) => { e.stopPropagation(); if(flashcardPool[currentFlashIndex]) speak(flashcardPool[currentFlashIndex].english); });
+
+    // 피드백 전용 일시적 플래시 활성화 유틸리티 함수
+    function triggerBtnFlash(btnId) {
+        const btn = document.getElementById(btnId);
+        if(!btn) return;
+        btn.classList.add('btn-flash-active');
+        setTimeout(() => {
+            btn.classList.remove('btn-flash-active');
+        }, 280); // 0.28초 뒤 피드백 컬러 소멸
+    }
+
+    // [전체] 버튼 누를 시 전체 리스트를 최신순 정렬하여 로딩
+    document.getElementById('fc-btn-all').addEventListener('click', () => {
+        triggerBtnFlash('fc-btn-all');
+        currentFcDataset = 'all';
+        isReviewModeActive = false;
+        wrongWordsIds = [];
+        restoreFcLayout();
+        document.getElementById('fc-actions').style.display = 'flex';
+        const sortedWords = [...allWords].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+        initFlashcard(sortedWords);
+    });
+
+    // [랜덤] 버튼 누를 시 현재 활성화된 데이터셋 모드를 셔플 처리
+    document.getElementById('fc-btn-shuffle').addEventListener('click', () => {
+        triggerBtnFlash('fc-btn-shuffle');
+        
+        // 현재 활성 상태 세트 선택
+        let targetSet = [];
+        if(currentFcDataset === 'star') {
+            targetSet = allWords.filter(w => w.starred === true).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+        } else {
+            targetSet = [...allWords].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
+        if(targetSet.length === 0) return;
+
+        flashcardPool = buildFlashcardPool(targetSet);
+        
+        // 정렬을 순수 무작위 무작위 셔플 (Fisher-Yates 알고리즘)
+        for(let i = flashcardPool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [flashcardPool[i], flashcardPool[j]] = [flashcardPool[j], flashcardPool[i]];
+        }
+
+        currentFlashIndex = 0;
+        isCardRevealed = false;
+        scoreVCount = 0;
+        scoreXCount = 0;
+        restoreFcLayout();
+        document.getElementById('fc-actions').style.display = 'flex';
+        showFlashcard();
+    });
+
+    // [즐겨찾기] 버튼 누를 시 즐겨찾기 문장 리스트를 최신순 정렬하여 로딩
+    document.getElementById('fc-btn-star-mode').addEventListener('click', () => {
+        triggerBtnFlash('fc-btn-star-mode');
+        const starredWords = allWords.filter(w => w.starred === true).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+        if(starredWords.length === 0) {
+            showInlineToast('⭐', '즐겨찾기한 문장이 없습니다!');
+            return;
+        }
+        currentFcDataset = 'star';
+        isReviewModeActive = false;
+        restoreFcLayout();
+        document.getElementById('fc-actions').style.display = 'flex';
+        initFlashcard(starredWords);
+    });
+
+    document.getElementById('fc-star-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if(flashcardPool.length === 0 || currentFlashIndex >= flashcardPool.length) return;
+        const currentWord = flashcardPool[currentFlashIndex];
+        const baseWordId = currentWord.id.split('_link_')[0];
+        const baseWord = allWords.find(w => w.id === baseWordId);
+        if(!baseWord) return;
+        const newStarred = !baseWord.starred;
+
+        baseWord.starred = newStarred;
+        flashcardPool.forEach(item => {
+            if(item.id.split('_link_')[0] === baseWordId) {
+                item.starred = newStarred;
+            }
+        });
+
+        const fcStarBtn = document.getElementById('fc-star-btn');
+        if(newStarred) {
+            fcStarBtn.className = 'fa-solid fa-star';
+            fcStarBtn.style.color = '#ffca28';
+        } else {
+            fcStarBtn.className = 'fa-regular fa-star';
+            fcStarBtn.style.color = 'var(--text-sub)';
+        }
+        fcStarBtn.id = 'fc-star-btn';
+
+        saveWords(allWords);
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if(!document.getElementById('tab-flashcard').classList.contains('active')) return;
+        if(flashcardPool.length === 0) return;
+
+        if(e.key === 'ArrowLeft') {
+            if(currentFlashIndex > 0) {
+                currentFlashIndex--;
+                isCardRevealed = false;
+                showFlashcard();
+            }
+        } else if(e.key === 'ArrowRight') {
+            if(currentFlashIndex < flashcardPool.length - 1) {
+                currentFlashIndex++;
+                isCardRevealed = false;
+                showFlashcard();
+            }
+        } else if(e.key === ' ' || e.code === 'Space') {
+            e.preventDefault(); 
+            isCardRevealed = !isCardRevealed;
+            showFlashcard();
+        }
+    });
+
+    // 모바일 터치 스와이프 제어
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const cardZone = document.getElementById('flashcard-box');
+
+    cardZone.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches.screenX;
+    }, false);
+
+    cardZone.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches.screenX;
+        handleSwipeGesture();
+    }, false);
+
+    function handleSwipeGesture() {
+        const threshold = 60;
+        if (touchStartX - touchEndX > threshold) {
+            processCardScore('V');
+        } else if (touchEndX - touchStartX > threshold) {
+            processCardScore('X');
+        }
+    }
+
+    // 검색 필터
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        const val = e.target.value.toLowerCase();
+        const filtered = allWords.filter(w => 
+            w.korean.toLowerCase().includes(val) || 
+            w.english.toLowerCase().includes(val) ||
+            (w.memo && w.memo.toLowerCase().includes(val))
+        );
+        renderWordList(filtered);
+    });
+
+    function showInlineToast(emoji, msg, duration = 2200) {
+        const toast = document.getElementById('inline-toast');
+        document.getElementById('inline-toast-emoji').innerText = emoji;
+        document.getElementById('inline-toast-msg').innerText = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), duration);
+    }
+
+    // Firebase 준비되면 데이터 로드 후 앱 시작
+    window.addEventListener('firebase-ready', async () => {
+        allWords = await loadWordsFromFirebase();
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(allWords)); } catch {}
+        const overlay = document.getElementById('firebase-loading');
+        overlay.classList.add('hide');
+        setTimeout(() => overlay.style.display = 'none', 400);
+        refreshFromStorage();
+    });
+
+    // 5초 안에 Firebase 안 되면 로컬로 시작
+    setTimeout(() => {
+        const overlay = document.getElementById('firebase-loading');
+        if (!overlay.classList.contains('hide')) {
+            allWords = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } })();
+            overlay.classList.add('hide');
+            setTimeout(() => overlay.style.display = 'none', 400);
+            refreshFromStorage();
+        }
+    }, 5000);
+</script>
+</body>
+</html>
