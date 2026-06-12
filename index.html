@@ -703,13 +703,8 @@
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
         if (isIOS) {
-            // iOS Safari: Enhanced 음성 우선 (자연스러운 신경망 음성)
-            _ttsVoice = voices.find(v => v.name === 'Nicky (Enhanced)' && v.lang.startsWith('en'))
-                     || voices.find(v => v.name === 'Zoe (Enhanced)' && v.lang.startsWith('en'))
-                     || voices.find(v => v.name === 'Samantha (Enhanced)' && v.lang.startsWith('en'))
-                     || voices.find(v => v.name.includes('Enhanced') && v.lang.startsWith('en'))
-                     || voices.find(v => v.name === 'Samantha' && v.lang.startsWith('en'))
-                     || voices.find(v => v.lang === 'en-US');
+            // iOS Safari: 시스템 기본 음성 사용 (설정에서 지정한 음성 그대로 나옴)
+            _ttsVoice = null;
         } else {
             // Android / Chrome: Google US English
             _ttsVoice = voices.find(v => v.name === 'Google US English')
