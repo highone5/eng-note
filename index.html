@@ -703,9 +703,12 @@
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
         if (isIOS) {
-            // iOS Safari: Samantha (Enhanced 포함)
-            _ttsVoice = voices.find(v => v.name === 'Samantha' && v.lang.startsWith('en'))
-                     || voices.find(v => v.name.includes('Samantha'))
+            // iOS Safari: Enhanced 음성 우선 (자연스러운 신경망 음성)
+            _ttsVoice = voices.find(v => v.name === 'Nicky (Enhanced)' && v.lang.startsWith('en'))
+                     || voices.find(v => v.name === 'Zoe (Enhanced)' && v.lang.startsWith('en'))
+                     || voices.find(v => v.name === 'Samantha (Enhanced)' && v.lang.startsWith('en'))
+                     || voices.find(v => v.name.includes('Enhanced') && v.lang.startsWith('en'))
+                     || voices.find(v => v.name === 'Samantha' && v.lang.startsWith('en'))
                      || voices.find(v => v.lang === 'en-US');
         } else {
             // Android / Chrome: Google US English
