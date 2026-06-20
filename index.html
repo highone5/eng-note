@@ -146,13 +146,8 @@
         
         .english-blur-box { font-size: 16px; color: var(--text-main); font-weight: normal; font-family: var(--english-font) !important; margin-bottom: 12px; line-height: 1.5; display: block; }
 
-        /* 정렬 칩 */
-        .sort-row { display: flex; gap: 6px; margin-bottom: 14px; }
-        .sort-chip { padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid #e5e5ea; color: var(--text-sub); background: #fff; cursor: pointer; transition: all 0.15s; }
-        .sort-chip.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
-
         /* 연결 문장 리스트 디자인 */
-        .link-section { border-top: 1px dashed #e5e5ea; padding-top: 12px; margin-top: 12px; }
+        .link-section { border-top: 1px solid #e5e5ea; padding-top: 12px; margin-top: 12px; }
         .link-item { background: #fafafa; border: 1px solid #f2f2f7; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .link-item .en-txt { font-weight: normal; font-size: 14px; color: var(--text-main); font-family: var(--english-font) !important; }
         
@@ -321,10 +316,7 @@
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" id="search-input" placeholder="영어 또는 한국어로 검색">
         </div>
-        <div class="sort-row">
-            <div class="sort-chip active" id="sort-newest">최신순</div>
-            <div class="sort-chip" id="sort-oldest">오래된순</div>
-        </div>
+
         <div id="word-list-container"></div>
     </div>
 
@@ -406,12 +398,12 @@
                 <input type="text" id="input-english" placeholder="영어 문장을 입력하세요">
             </div>
             <div class="form-group">
-                <label>메모 (선택)</label>
-                <input type="text" id="input-memo" placeholder="예: 격식체, 비즈니스용...">
+                <label>메모</label>
+                <input type="text" id="input-memo" placeholder="(선택)">
             </div>
             <div class="modal-btns">
-                <button class="btn btn-cancel" id="close-add-modal">취소</button>
                 <button class="btn btn-submit" id="btn-save-word">저장하기</button>
+                <button class="btn btn-cancel" id="close-add-modal">취소</button>
             </div>
         </div>
     </div>
@@ -455,8 +447,8 @@
                 <input type="text" id="link-english" placeholder="영어 문장을 입력하세요">
             </div>
             <div class="modal-btns">
-                <button class="btn btn-cancel" id="close-link-modal">취소</button>
                 <button class="btn btn-submit" id="btn-save-link">저장하기</button>
+                <button class="btn btn-cancel" id="close-link-modal">취소</button>
             </div>
         </div>
     </div>
@@ -555,14 +547,16 @@
 
     function updateDashboardCounts() {
         const words = allWords;
-        const allCount = words.length;
+        const linkCount = words.reduce((sum, w) => sum + (w.links ? w.links.length : 0), 0);
+        const allCount = words.length + linkCount;
 
         const todayStr = new Date().toDateString();
-        const todayCount = words.filter(w => {
+        const todayWords = words.filter(w => {
             if(!w.createdAt) return false;
-            const d = parseDate(w.createdAt);
-            return d.toDateString() === todayStr;
-        }).length;
+            return parseDate(w.createdAt).toDateString() === todayStr;
+        });
+        const todayLinkCount = todayWords.reduce((sum, w) => sum + (w.links ? w.links.length : 0), 0);
+        const todayCount = todayWords.length + todayLinkCount;
 
         const starCount = words.filter(w => w.starred === true).length;
 
@@ -590,19 +584,11 @@
     document.getElementById('chip-star').addEventListener('click', () => {
         currentFilter = 'star'; setActiveChip('star'); applyFilter();
     });
-    document.getElementById('sort-newest').addEventListener('click', () => {
-        currentSort = 'newest'; setActiveSortChip('newest'); applyFilter();
-    });
-    document.getElementById('sort-oldest').addEventListener('click', () => {
-        currentSort = 'oldest'; setActiveSortChip('oldest'); applyFilter();
-    });
-
     document.getElementById('app-logo').addEventListener('click', () => {
         document.getElementById('search-input').value = '';
         currentFilter = 'all';
         currentSort = 'newest';
         setActiveChip('all');
-        setActiveSortChip('newest');
         switchTab('tab-home');
         renderWordList(allWords);
     });
@@ -644,7 +630,6 @@
                 currentFilter = 'all';
                 currentSort = 'newest';
                 setActiveChip('all');
-                setActiveSortChip('newest');
                 switchTab('tab-home');
                 renderWordList(allWords);
             } else {
@@ -814,7 +799,7 @@
                 <div>
                     <div class="english-blur-box" id="en-box-${word.id}">${word.english}</div>
                 </div>
-                <div style="font-size:13px; color:var(--text-sub); margin-bottom:5px; padding-top:${word.memo ? '8px' : '0'}; border-top:${word.memo ? '1px dashed #eee' : 'none'}; margin-top:${word.memo ? '8px' : '0'};">${word.memo ? word.memo : ''}</div>
+                <div style="font-size:13px; color:var(--text-sub); margin-bottom:5px; padding-top:${word.memo ? '8px' : '0'}; border-top:${word.memo ? '1px solid #eee' : 'none'}; margin-top:${word.memo ? '8px' : '0'};">${word.memo ? word.memo : ''}</div>
                 ${linksHtml}
                 <div class="add-link-btn" id="add-link-${word.id}">+ 더하기</div>
             `;
@@ -882,12 +867,10 @@
 
     document.getElementById('btn-edit-delete').addEventListener('click', () => {
         const id = document.getElementById('edit-word-id').value;
-        if(confirm("이 문장을 완전히 삭제할까요?")) {
-            allWords = allWords.filter(w => w.id !== id);
-            saveWords(allWords);
-            refreshFromStorage();
-            editModal.style.display = 'none';
-        }
+        allWords = allWords.filter(w => w.id !== id);
+        saveWords(allWords);
+        refreshFromStorage();
+        editModal.style.display = 'none';
     });
 
     document.getElementById('btn-save-word').addEventListener('click', () => {
@@ -914,9 +897,6 @@
         document.getElementById('input-english').value = '';
         document.getElementById('input-memo').value = '';
         document.getElementById('input-korean').focus();
-
-        // 팝업은 유지, 토스트 메시지만 표시
-        showInlineToast('✅', '문장이 추가되었습니다', 1000);
     });
 
     document.getElementById('btn-save-link').addEventListener('click', () => {
