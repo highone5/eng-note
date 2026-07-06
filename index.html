@@ -1183,11 +1183,11 @@
     const cardZone = document.getElementById('flashcard-box');
 
     cardZone.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches.screenX;
+        touchStartX = e.changedTouches[0].screenX;
     }, false);
 
     cardZone.addEventListener('touchend', (e) => {
-        touchEndX = e.changedTouches.screenX;
+        touchEndX = e.changedTouches[0].screenX;
         handleSwipeGesture();
     }, false);
 
