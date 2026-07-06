@@ -259,6 +259,7 @@
             user-select: none;
             position: relative;
             min-height: 300px;
+            touch-action: pan-y;
         }
         .fc-top-section {
             flex: 1 1 50%;
@@ -1179,17 +1180,32 @@
 
     // 모바일 터치 스와이프 제어
     let touchStartX = 0;
+    let touchStartY = 0;
     let touchEndX = 0;
+    let isHorizontalSwipe = false;
     const cardZone = document.getElementById('flashcard-box');
 
     cardZone.addEventListener('touchstart', (e) => {
         touchStartX = e.changedTouches[0].screenX;
-    }, false);
+        touchStartY = e.changedTouches[0].screenY;
+        isHorizontalSwipe = false;
+    }, { passive: true });
+
+    cardZone.addEventListener('touchmove', (e) => {
+        const dx = e.changedTouches[0].screenX - touchStartX;
+        const dy = e.changedTouches[0].screenY - touchStartY;
+        // 가로 이동이 세로 이동보다 뚜렷하면, 브라우저의 스와이프 제스처(뒤로가기 등)가
+        // 가로채지 못하도록 기본 동작을 막고 우리 쪽 스와이프로 처리
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+            isHorizontalSwipe = true;
+            e.preventDefault();
+        }
+    }, { passive: false });
 
     cardZone.addEventListener('touchend', (e) => {
         touchEndX = e.changedTouches[0].screenX;
-        handleSwipeGesture();
-    }, false);
+        if (isHorizontalSwipe) handleSwipeGesture();
+    }, { passive: true });
 
     function handleSwipeGesture() {
         const threshold = 60;
