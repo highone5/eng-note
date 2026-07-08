@@ -307,6 +307,43 @@
         .english-blur-box, .en-txt {
             font-family: var(--english-font) !important;
         }
+
+        /* 카테고리 아코디언 (홈화면) */
+        .category-section { background: #fff; border: 1px solid #f2f2f7; border-radius: 18px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
+        .category-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; cursor: pointer; }
+        .category-header:active { background: #f9f9f9; }
+        .category-header-left { display: flex; align-items: center; gap: 8px; }
+        .category-name { font-size: 15px; font-weight: 700; color: var(--text-main); }
+        .category-count { font-size: 13px; color: var(--text-sub); font-weight: 600; }
+        .category-chevron { color: var(--text-sub); font-size: 14px; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        .category-section.open .category-chevron { transform: rotate(180deg); }
+        .category-body { display: none; padding: 0 14px 14px; }
+        .category-section.open .category-body { display: block; }
+        .category-empty-msg { text-align: center; color: var(--text-sub); font-size: 13px; padding: 20px 0; }
+
+        /* 카드에 표시되는 카테고리 태그 (전체/오늘/즐겨찾기/검색 시) */
+        .card-category-tag { display: inline-block; font-size: 11px; font-weight: 700; color: var(--primary-color); background: rgba(255,127,80,0.1); padding: 3px 10px; border-radius: 10px; margin-bottom: 10px; }
+
+        /* 설정 탭 - 카테고리 관리 */
+        .cat-manage-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid #f2f2f7; }
+        .cat-manage-row:last-child { border-bottom: none; }
+        .cat-manage-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .cat-manage-name { font-size: 14px; font-weight: 700; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cat-manage-count { font-size: 12px; color: var(--text-sub); font-weight: 600; flex-shrink: 0; }
+        .cat-manage-actions { display: flex; gap: 16px; color: var(--text-sub); font-size: 15px; flex-shrink: 0; }
+        .cat-manage-actions i { cursor: pointer; }
+        .cat-manage-actions i:hover { color: var(--primary-color); }
+        .cat-manage-actions i.disabled { opacity: 0.25; pointer-events: none; }
+
+        /* 플래시카드 - 카테고리 선택 팝업 (중앙 모달) */
+        .fc-category-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 14px; cursor: pointer; font-size: 15px; font-weight: 600; color: var(--text-main); transition: background-color 0.15s; margin-bottom: 6px; }
+        .fc-category-item:hover { background: #f2f2f7; }
+        .fc-category-item.active { color: var(--primary-color); background: rgba(255,127,80,0.08); }
+        .fc-category-item .fc-category-item-count { font-size: 12px; color: var(--text-sub); font-weight: 600; }
+        .fc-category-item.active .fc-category-item-count { color: var(--primary-color); }
+
+        /* 플래시카드 상단 현재 모드 라벨 */
+        .fc-mode-label { font-size: 12px; font-weight: 700; color: var(--primary-color); letter-spacing: 0.2px; margin-bottom: 2px; }
     </style>
 </head>
 <body>
@@ -322,7 +359,7 @@
     <div id="tab-home" class="tab-content active">
         <!-- 대시보드 그리드 영역 (전체/오늘/즐겨찾기 카드 이모티콘 및 아이콘 제거 완성 버전) -->
         <div class="dashboard-grid">
-            <div class="dash-card active" id="chip-all">
+            <div class="dash-card" id="chip-all">
                 <span class="dash-card-label">전체</span>
                 <span class="dash-card-badge" id="count-all">0</span>
             </div>
@@ -341,12 +378,16 @@
             <input type="text" id="search-input" placeholder="영어 또는 한국어로 검색">
         </div>
 
+        <div id="category-accordion-container"></div>
         <div id="word-list-container"></div>
     </div>
 
     <!-- 플래시카드 탭 (진행카운터 + 2단 카드 + 목록/셔플/개수 원형 버튼) -->
     <div id="tab-flashcard" class="tab-content">
-        <div class="fc-progress-wrap"><span id="fc-progress">0 / 0</span></div>
+        <div class="fc-progress-wrap">
+            <div class="fc-mode-label" id="fc-mode-label">전체</div>
+            <span id="fc-progress">0 / 0</span>
+        </div>
 
         <div class="flashcard-area" id="flashcard-box">
             <div class="fc-top-section" id="fc-top-section">
@@ -359,19 +400,18 @@
 
         <div class="fc-control-bar">
             <div class="fc-icon-btn-wrap">
-                <button class="fc-icon-btn" id="fc-btn-list"><i class="fa-solid fa-bars"></i></button>
-                <div class="fc-dropdown-menu" id="fc-list-dropdown">
-                    <div class="fc-dropdown-item active" data-mode="all">전체</div>
-                    <div class="fc-dropdown-item" data-mode="today">오늘</div>
-                    <div class="fc-dropdown-item" data-mode="star">즐겨찾기</div>
+                <button class="fc-icon-btn" id="fc-btn-scope"><i class="fa-solid fa-list-check"></i></button>
+                <div class="fc-dropdown-menu" id="fc-scope-dropdown">
+                    <div class="fc-dropdown-item active" data-scope="all">전체</div>
+                    <div class="fc-dropdown-item" data-scope="today">오늘</div>
+                    <div class="fc-dropdown-item" data-scope="star">즐겨찾기</div>
                 </div>
             </div>
             <div class="fc-icon-btn-wrap">
-                <button class="fc-icon-btn" id="fc-btn-shuffle"><i class="fa-solid fa-shuffle"></i></button>
+                <button class="fc-icon-btn" id="fc-btn-category"><i class="fa-solid fa-folder-open"></i></button>
             </div>
             <div class="fc-icon-btn-wrap">
-                <button class="fc-icon-btn fc-count-btn" id="fc-btn-count">all</button>
-                <div class="fc-dropdown-menu" id="fc-count-dropdown"></div>
+                <button class="fc-icon-btn" id="fc-btn-shuffle"><i class="fa-solid fa-shuffle"></i></button>
             </div>
             <div class="fc-icon-btn-wrap">
                 <button class="fc-icon-btn" id="fc-btn-audio"><i class="fa-solid fa-volume-high"></i></button>
@@ -393,6 +433,12 @@
                     <div class="color-dot" style="background: #7A619F;" data-color="#7A619F"></div>
                 </div>
             </div>
+        </div>
+
+        <div class="settings-section">
+            <h3>카테고리 관리</h3>
+            <div id="category-manage-list"></div>
+            <div class="add-link-btn" id="btn-add-category" style="margin-top:14px; font-size:13px;">+ 새 카테고리 추가</div>
         </div>
 
         <div class="settings-section">
@@ -432,8 +478,8 @@
                 <input type="text" id="input-english" placeholder="영어 문장을 입력하세요">
             </div>
             <div class="form-group">
-                <label>메모</label>
-                <input type="text" id="input-memo" placeholder="(선택)">
+                <label>카테고리</label>
+                <select id="input-category"></select>
             </div>
             <div class="modal-btns">
                 <button class="btn btn-submit" id="btn-save-word">저장하기</button>
@@ -456,8 +502,8 @@
                 <input type="text" id="edit-english">
             </div>
             <div class="form-group">
-                <label>메모</label>
-                <input type="text" id="edit-memo">
+                <label>카테고리</label>
+                <select id="edit-category"></select>
             </div>
             <div class="modal-btns">
                 <button class="btn btn-cancel" id="btn-edit-submit">수정</button>
@@ -509,6 +555,33 @@
         </div>
     </div>
 
+    <!-- 카테고리 추가/이름변경 모달 -->
+    <div class="modal" id="category-form-modal">
+        <div class="modal-content">
+            <h3 id="category-form-title" style="margin-bottom: 20px; font-size: 20px;">새 카테고리</h3>
+            <input type="hidden" id="category-form-id">
+            <div class="form-group">
+                <label>카테고리 이름</label>
+                <input type="text" id="category-form-name" placeholder="카테고리 이름을 입력하세요">
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-submit" id="btn-category-form-save">저장</button>
+                <button class="btn btn-cancel" id="close-category-form-modal">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 플래시카드 카테고리 선택 팝업 -->
+    <div class="modal" id="fc-category-modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 16px; font-size: 20px;">카테고리 선택</h3>
+            <div id="fc-category-list"></div>
+            <div class="modal-btns">
+                <button class="btn btn-cancel" id="close-fc-category-modal">닫기</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 하단 탭 내비게이션 -->
     <nav>
         <div class="nav-item active" data-tab="tab-home"><i class="fa-solid fa-house"></i>홈</div>
@@ -522,24 +595,35 @@
     const FIRESTORE_DOC = 'my-enclip';
     const STORAGE_KEY = 'eng-note-words'; // 오프라인 폴백용
 
-    async function loadWordsFromFirebase() {
+    function loadDataFromLocalStorage() {
+        try {
+            const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (Array.isArray(raw)) return { words: raw, categories: null }; // 구버전 포맷 호환
+            if (raw && typeof raw === 'object') return { words: raw.words || [], categories: raw.categories || null };
+            return { words: [], categories: null };
+        } catch { return { words: [], categories: null }; }
+    }
+
+    async function loadDataFromFirebase() {
         try {
             const docRef = window._doc(window._db, 'enclip', FIRESTORE_DOC);
             const snap = await window._getDoc(docRef);
-            if (snap.exists()) return snap.data().words || [];
-            return [];
+            if (snap.exists()) {
+                const data = snap.data();
+                return { words: data.words || [], categories: data.categories || null };
+            }
+            return { words: [], categories: null };
         } catch(e) {
             console.warn('Firebase 읽기 실패, 로컬 데이터 사용:', e);
-            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
+            return loadDataFromLocalStorage();
         }
     }
 
-    async function saveWords(words) {
-        allWords = words;
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(words)); } catch {}
+    async function saveData() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ words: allWords, categories: allCategories })); } catch {}
         try {
             const docRef = window._doc(window._db, 'enclip', FIRESTORE_DOC);
-            await window._setDoc(docRef, { words: words });
+            await window._setDoc(docRef, { words: allWords, categories: allCategories });
         } catch(e) {
             console.warn('Firebase 저장 실패, 로컬에만 저장됨:', e);
         }
@@ -548,6 +632,9 @@
 
     function generateId() {
         return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    }
+    function generateCategoryId() {
+        return 'cat_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     }
 
     // 본문장 1개 + 그 문장에 딸린 연결문장 개수를 합산한 카드 수 (대시보드 전체 카운트와 동일 기준)
@@ -560,16 +647,32 @@
         return words.reduce((sum, w) => sum + cardCount(w), 0);
     }
 
-    let allWords = [];
-    let flashcardPool = []; 
-    let currentFlashIndex = 0;
-    let isCardRevealed = false; 
-    let currentFilter = 'all';
-    let currentSort = 'newest';
+    function byNewest(a, b) { return new Date(b.createdAt) - new Date(a.createdAt); }
 
-    // 플래시카드 상태 보존 관리 변수
-    let currentFcDataset = 'all'; // 'all' | 'star' | 'today'
-    let currentFcCount = 'all'; // 'all' | 30 | 40 | 50
+    function parseDate(createdAt) {
+        if(!createdAt) return null;
+        if(createdAt.toDate) return createdAt.toDate();
+        return new Date(createdAt);
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+    }
+
+    let allWords = [];
+    let allCategories = [{ id: 'default', name: '기본' }];
+    let lastUsedCategoryId = 'default';
+
+    let flashcardPool = [];
+    let currentFlashIndex = 0;
+    let isCardRevealed = false;
+
+    // 홈 화면 모드: 'category'(카테고리별 아코디언) | 'all' | 'today' | 'star'
+    let currentHomeMode = 'category';
+    let openCategoryIds = new Set(); // 펼쳐진 카테고리 상태 보존
+
+    // 플래시카드 모드: {type:'scope', value:'all'|'today'|'star'} | {type:'category', id:categoryId}
+    let fcMode = { type: 'scope', value: 'all' };
 
     // --- 시스템 초기화 세팅 (테마 컬러 및 폰트 불러오기) ---
     let savedColor = localStorage.getItem('eng-note-theme-color') || '#FF7F50';
@@ -584,6 +687,34 @@
             localStorage.setItem('eng-note-theme-color', targetColor);
         });
     });
+
+    // 기존 데이터 마이그레이션: 카테고리가 없는 문장이나, 삭제된 카테고리를 가리키는 문장은
+    // 남아있는 카테고리 중 첫 번째로 이동. 카테고리가 하나도 없으면 기본 카테고리 생성
+    function ensureCategories() {
+        let changed = false;
+        if(!allCategories || allCategories.length === 0) {
+            allCategories = [{ id: 'default', name: '기본' }];
+            changed = true;
+        }
+        const fallbackId = allCategories[0].id;
+        allWords.forEach(w => {
+            if(!w.categoryId || !allCategories.some(c => c.id === w.categoryId)) {
+                w.categoryId = fallbackId;
+                changed = true;
+            }
+        });
+        return changed;
+    }
+
+    function getCategoryName(id) {
+        const c = allCategories.find(c => c.id === id);
+        if(c) return c.name;
+        return allCategories[0] ? allCategories[0].name : '';
+    }
+
+    function getCategoriesOrdered() {
+        return allCategories.slice();
+    }
 
     function updateDashboardCounts() {
         const words = allWords;
@@ -605,32 +736,30 @@
         document.getElementById('count-star').innerText = starCount;
     }
 
-    // 대시보드 필터 칩 (전체 / 오늘 / 즐겨찾기)
-    function setActiveChip(id) {
-        ['chip-all','chip-today','chip-star'].forEach(c => document.getElementById(c).classList.remove('active'));
-        document.getElementById('chip-' + id).classList.add('active');
-    }
-    function setActiveSortChip(id) {
-        ['sort-newest','sort-oldest'].forEach(c => document.getElementById(c).classList.remove('active'));
-        document.getElementById('sort-' + id).classList.add('active');
+    // 대시보드 필터 칩 (전체 / 오늘 / 즐겨찾기) - 카테고리 상관없이 전체 문장을 대상으로 함
+    function setActiveChip() {
+        ['all','today','star'].forEach(id => {
+            document.getElementById('chip-' + id).classList.toggle('active', currentHomeMode === id);
+        });
     }
 
     document.getElementById('chip-all').addEventListener('click', () => {
-        currentFilter = 'all'; setActiveChip('all'); applyFilter();
+        currentHomeMode = (currentHomeMode === 'all') ? 'category' : 'all';
+        renderHome();
     });
     document.getElementById('chip-today').addEventListener('click', () => {
-        currentFilter = 'today'; setActiveChip('today'); applyFilter();
+        currentHomeMode = (currentHomeMode === 'today') ? 'category' : 'today';
+        renderHome();
     });
     document.getElementById('chip-star').addEventListener('click', () => {
-        currentFilter = 'star'; setActiveChip('star'); applyFilter();
+        currentHomeMode = (currentHomeMode === 'star') ? 'category' : 'star';
+        renderHome();
     });
     document.getElementById('app-logo').addEventListener('click', () => {
         document.getElementById('search-input').value = '';
-        currentFilter = 'all';
-        currentSort = 'newest';
-        setActiveChip('all');
+        currentHomeMode = 'category';
         switchTab('tab-home');
-        renderWordList(allWords);
+        renderHome();
     });
 
     function switchTab(tabId) {
@@ -644,16 +773,11 @@
         const fab = document.getElementById('open-add-modal');
         if(tabId === 'tab-flashcard') {
             fab.style.display = 'none';
-            currentFcDataset = 'all'; // 전체 문장 디폴트화
-            currentFcCount = 'all';
-            setFcModeUI('all');
-            setFcCountUI('all');
-            populateCountDropdown();
-
-            // 최초 로드 시 최신순 정렬하여 로드
+            resetFcMode(); // 플래시카드 진입 시 항상 전체 문장으로 초기화
             loadFlashcardPool(buildPoolForCurrentSelection(false));
         } else if(tabId === 'tab-setting') {
             fab.style.display = 'none';
+            renderCategoryManageList();
         } else if(tabId === 'tab-home') {
             fab.style.display = 'flex';
         } else {
@@ -666,11 +790,9 @@
             const tabId = item.getAttribute('data-tab');
             if(tabId === 'tab-home') {
                 document.getElementById('search-input').value = '';
-                currentFilter = 'all';
-                currentSort = 'newest';
-                setActiveChip('all');
+                currentHomeMode = 'category';
                 switchTab('tab-home');
-                renderWordList(allWords);
+                renderHome();
             } else {
                 switchTab(tabId);
             }
@@ -679,7 +801,12 @@
 
     // 모달 제어 바인딩
     const addModal = document.getElementById('add-modal');
-    document.getElementById('open-add-modal').addEventListener('click', () => addModal.style.display = 'flex');
+    document.getElementById('open-add-modal').addEventListener('click', () => {
+        populateCategorySelects();
+        const inputSel = document.getElementById('input-category');
+        if(getCategoriesOrdered().some(c => c.id === lastUsedCategoryId)) inputSel.value = lastUsedCategoryId;
+        addModal.style.display = 'flex';
+    });
     document.getElementById('close-add-modal').addEventListener('click', () => addModal.style.display = 'none');
     
     const editModal = document.getElementById('edit-modal');
@@ -700,7 +827,7 @@
         const parentWord = allWords.find(w => w.id === parentId);
         if(!parentWord) return;
         parentWord.links = parentWord.links.map(l => l.createdAt === createdAt ? { ...l, korean: newKorean, english: newEnglish } : l);
-        saveWords(allWords);
+        saveData();
         refreshFromStorage();
         linkEditModal.style.display = 'none';
     });
@@ -711,7 +838,7 @@
         const parentWord = allWords.find(w => w.id === parentId);
         if(!parentWord) return;
         parentWord.links = parentWord.links.filter(l => l.createdAt !== createdAt);
-        saveWords(allWords);
+        saveData();
         refreshFromStorage();
         linkEditModal.style.display = 'none';
     });
@@ -756,42 +883,121 @@
     }
 
     function refreshFromStorage() {
-        applyFilter();
+        renderHome();
         updateDashboardCounts();
-        populateCountDropdown();
+        renderCategoryManageList();
+        populateCategorySelects();
     }
 
-    function parseDate(createdAt) {
-        if(!createdAt) return null;
-        if(createdAt.toDate) return createdAt.toDate();
-        return new Date(createdAt);
-    }
+    // ── 홈 화면 렌더링 ──
+    // 검색어가 있으면: 카테고리 상관없이 전체 문장에서 검색
+    // 검색어가 없고 currentHomeMode==='category': 카테고리별 아코디언 표시
+    // 검색어가 없고 all/today/star: 카테고리 상관없이 해당 조건의 전체 문장을 평면 리스트로 표시
+    function renderHome() {
+        setActiveChip();
+        const searchVal = document.getElementById('search-input').value.trim().toLowerCase();
+        const flatContainer = document.getElementById('word-list-container');
+        const accordionContainer = document.getElementById('category-accordion-container');
 
-    function applyFilter() {
-        let filtered = [...allWords];
-        if(currentFilter === 'today') {
+        if(searchVal) {
+            accordionContainer.style.display = 'none';
+            accordionContainer.innerHTML = '';
+            flatContainer.style.display = 'block';
+            const filtered = allWords.filter(w =>
+                w.korean.toLowerCase().includes(searchVal) ||
+                w.english.toLowerCase().includes(searchVal)
+            ).sort(byNewest);
+            renderWordList(filtered, flatContainer, false);
+            return;
+        }
+
+        if(currentHomeMode === 'category') {
+            flatContainer.style.display = 'none';
+            flatContainer.innerHTML = '';
+            accordionContainer.style.display = 'block';
+            renderCategoryAccordion();
+            return;
+        }
+
+        accordionContainer.style.display = 'none';
+        accordionContainer.innerHTML = '';
+        flatContainer.style.display = 'block';
+
+        let list;
+        if(currentHomeMode === 'today') {
             const todayStr = new Date().toDateString();
-            filtered = allWords.filter(w => {
-                if(!w.createdAt) return false;
-                const d = parseDate(w.createdAt);
-                return d.toDateString() === todayStr;
+            list = allWords.filter(w => w.createdAt && parseDate(w.createdAt).toDateString() === todayStr);
+        } else if(currentHomeMode === 'star') {
+            list = allWords.filter(w => w.starred === true);
+        } else {
+            list = [...allWords];
+        }
+        list.sort(byNewest);
+        renderWordList(list, flatContainer, false);
+    }
+
+    // 카테고리별 아코디언(드롭다운) 렌더링
+    function renderCategoryAccordion() {
+        const wrap = document.getElementById('category-accordion-container');
+        wrap.innerHTML = '';
+
+        if(allWords.length === 0) {
+            wrap.innerHTML = `
+                <div style="text-align:center; color:var(--text-sub); margin-top: 80px; font-size:14px; line-height:1.7;">
+                    <div style="font-weight:700; color:var(--text-main); margin-bottom:6px;">아직 저장된 문장이 없어요</div>
+                </div>`;
+            return;
+        }
+
+        getCategoriesOrdered().forEach(cat => {
+            const words = allWords.filter(w => w.categoryId === cat.id).sort(byNewest);
+            const isOpen = openCategoryIds.has(cat.id);
+
+            const section = document.createElement('div');
+            section.className = 'category-section' + (isOpen ? ' open' : '');
+            section.innerHTML = `
+                <div class="category-header" data-cat="${cat.id}">
+                    <div class="category-header-left">
+                        <span class="category-name">${escapeHtml(cat.name)}</span>
+                        <span class="category-count">(${totalCardCount(words)})</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down category-chevron"></i>
+                </div>
+                <div class="category-body"></div>
+            `;
+            wrap.appendChild(section);
+
+            const header = section.querySelector('.category-header');
+            const body = section.querySelector('.category-body');
+
+            if(isOpen) renderWordList(words, body, true);
+
+            header.addEventListener('click', () => {
+                const nowOpen = section.classList.contains('open');
+                if(nowOpen) {
+                    section.classList.remove('open');
+                    openCategoryIds.delete(cat.id);
+                    body.innerHTML = '';
+                } else {
+                    section.classList.add('open');
+                    openCategoryIds.add(cat.id);
+                    renderWordList(words, body, true);
+                }
             });
-        } else if(currentFilter === 'star') {
-            filtered = allWords.filter(w => w.starred === true);
-        }
-        if(currentSort === 'oldest') {
-            filtered = filtered.slice().reverse();
-        }
-        renderWordList(filtered);
+        });
     }
 
     // 메인화면 리스트 동적 UI 렌더링
-    function renderWordList(words) {
-        const container = document.getElementById('word-list-container');
+    // container: 렌더링할 대상 (기본: 홈 평면 리스트 컨테이너)
+    // inCategoryContext: true면 카테고리 아코디언 내부용(카테고리 태그 숨김)
+    function renderWordList(words, container, inCategoryContext) {
+        container = container || document.getElementById('word-list-container');
         container.innerHTML = '';
 
         if(words.length === 0) {
-            if(allWords.length === 0 && currentFilter === 'all' && !document.getElementById('search-input').value.trim()) {
+            if(inCategoryContext) {
+                container.innerHTML = `<div class="category-empty-msg">저장된 문장이 없습니다.</div>`;
+            } else if(allWords.length === 0) {
                 container.innerHTML = `
                     <div style="text-align:center; color:var(--text-sub); margin-top: 80px; font-size:14px; line-height:1.7;">
                         <div style="font-weight:700; color:var(--text-main); margin-bottom:6px;">아직 저장된 문장이 없어요</div>
@@ -839,7 +1045,6 @@
                 <div>
                     <div class="english-blur-box" id="en-box-${word.id}">${word.english}</div>
                 </div>
-                <div style="font-size:13px; color:var(--text-sub); margin-bottom:5px; padding-top:${word.memo ? '8px' : '0'}; border-top:${word.memo ? '1px solid #eee' : 'none'}; margin-top:${word.memo ? '8px' : '0'};">${word.memo ? word.memo : ''}</div>
                 ${linksHtml}
                 <div class="add-link-btn" id="add-link-${word.id}">+ 더하기</div>
             `;
@@ -853,7 +1058,7 @@
             card.querySelector(`#star-${word.id}`).addEventListener('click', (e) => {
                 e.stopPropagation();
                 const target = allWords.find(w => w.id === word.id);
-                if(target) { target.starred = !target.starred; saveWords(allWords); refreshFromStorage(); }
+                if(target) { target.starred = !target.starred; saveData(); refreshFromStorage(); }
             });
 
             card.querySelector(`#audio-${word.id}`).addEventListener('click', (e) => { e.stopPropagation(); speak(word.english); });
@@ -886,11 +1091,26 @@
         });
     }
 
+    // 카테고리 <select> 옵션 채우기 (새 문장 추가 / 문장 수정 모달)
+    function populateCategorySelects() {
+        const cats = getCategoriesOrdered();
+        const optionsHtml = cats.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+        const inputSel = document.getElementById('input-category');
+        const editSel = document.getElementById('edit-category');
+        const prevInputVal = inputSel.value;
+        const prevEditVal = editSel.value;
+        inputSel.innerHTML = optionsHtml;
+        editSel.innerHTML = optionsHtml;
+        if(cats.some(c => c.id === prevInputVal)) inputSel.value = prevInputVal;
+        if(cats.some(c => c.id === prevEditVal)) editSel.value = prevEditVal;
+    }
+
     function openEditModal(word) {
         document.getElementById('edit-word-id').value = word.id;
         document.getElementById('edit-korean').value = word.korean;
         document.getElementById('edit-english').value = word.english;
-        document.getElementById('edit-memo').value = word.memo || '';
+        populateCategorySelects();
+        document.getElementById('edit-category').value = word.categoryId || (allCategories[0] ? allCategories[0].id : '');
         editModal.style.display = 'flex';
     }
 
@@ -898,17 +1118,17 @@
         const id = document.getElementById('edit-word-id').value;
         const uKorean = document.getElementById('edit-korean').value.trim();
         const uEnglish = document.getElementById('edit-english').value.trim();
-        const uMemo = document.getElementById('edit-memo').value.trim();
+        const uCategory = document.getElementById('edit-category').value || (allCategories[0] ? allCategories[0].id : '');
         if(!uKorean || !uEnglish) return alert("내용을 채워주세요.");
         const target = allWords.find(w => w.id === id);
-        if(target) { target.korean = uKorean; target.english = uEnglish; target.memo = uMemo; saveWords(allWords); refreshFromStorage(); }
+        if(target) { target.korean = uKorean; target.english = uEnglish; target.categoryId = uCategory; saveData(); refreshFromStorage(); }
         editModal.style.display = 'none';
     });
 
     document.getElementById('btn-edit-delete').addEventListener('click', () => {
         const id = document.getElementById('edit-word-id').value;
         allWords = allWords.filter(w => w.id !== id);
-        saveWords(allWords);
+        saveData();
         refreshFromStorage();
         editModal.style.display = 'none';
     });
@@ -916,7 +1136,7 @@
     document.getElementById('btn-save-word').addEventListener('click', () => {
         const korean = document.getElementById('input-korean').value.trim();
         const english = document.getElementById('input-english').value.trim();
-        const memo = document.getElementById('input-memo').value.trim();
+        const categoryId = document.getElementById('input-category').value || (allCategories[0] ? allCategories[0].id : '');
 
         if(!korean || !english) return alert("한국어와 영어 문장을 모두 입력해 주세요.");
 
@@ -924,18 +1144,18 @@
             id: generateId(),
             korean: korean,
             english: english,
-            memo: memo,
+            categoryId: categoryId,
             links: [],
             starred: false,
             createdAt: new Date().toISOString()
         };
         allWords.unshift(newWord);
-        saveWords(allWords);
+        lastUsedCategoryId = categoryId;
+        saveData();
         refreshFromStorage();
 
         document.getElementById('input-korean').value = '';
         document.getElementById('input-english').value = '';
-        document.getElementById('input-memo').value = '';
         document.getElementById('input-korean').focus();
     });
 
@@ -950,90 +1170,137 @@
         if(!parentWord) return;
         if(!parentWord.links) parentWord.links = [];
         parentWord.links.push({ korean: lKorean, english: lEnglish, createdAt: new Date().getTime(), inFlashcard: true });
-        saveWords(allWords);
+        saveData();
         refreshFromStorage();
         linkModal.style.display = 'none';
     });
 
-    // 개수 드롭다운(30/40/50) 항목을 전체 카드 수 기준으로 생성 + 버튼 라벨 동기화
-    function populateCountDropdown() {
-        const menu = document.getElementById('fc-count-dropdown');
-        const total = totalCardCount(allWords);
-        const options = [30, 40, 50].filter(n => n <= total);
-
-        menu.innerHTML = `<div class="fc-dropdown-item" data-count="all">all</div>` +
-            options.map(n => `<div class="fc-dropdown-item" data-count="${n}">${n}개</div>`).join('');
-
-        menu.querySelectorAll('.fc-dropdown-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const val = item.getAttribute('data-count');
-                currentFcCount = (val === 'all') ? 'all' : parseInt(val);
-                setFcCountUI(currentFcCount);
-                closeAllFcDropdowns();
-                loadFlashcardPool(buildPoolForCurrentSelection(false));
-            });
-        });
-
-        setFcCountUI(currentFcCount);
-    }
-
-    // 개수 버튼 라벨/활성 표시 갱신
-    function setFcCountUI(count) {
-        const btn = document.getElementById('fc-btn-count');
-        btn.innerText = (count === 'all') ? 'all' : count;
-        btn.classList.toggle('selected', count !== 'all');
-        document.querySelectorAll('#fc-count-dropdown .fc-dropdown-item').forEach(item => {
-            item.classList.toggle('active', item.getAttribute('data-count') === String(count));
+    // ── 설정 탭: 카테고리 관리 ──
+    function renderCategoryManageList() {
+        const wrap = document.getElementById('category-manage-list');
+        if(!wrap) return;
+        wrap.innerHTML = '';
+        const isOnlyCategory = allCategories.length <= 1;
+        getCategoriesOrdered().forEach(cat => {
+            const words = allWords.filter(w => w.categoryId === cat.id);
+            const row = document.createElement('div');
+            row.className = 'cat-manage-row';
+            row.innerHTML = `
+                <div class="cat-manage-left">
+                    <span class="cat-manage-name">${escapeHtml(cat.name)}</span>
+                    <span class="cat-manage-count">(${totalCardCount(words)})</span>
+                </div>
+                <div class="cat-manage-actions">
+                    <i class="fa-solid fa-pen" data-action="rename"></i>
+                    <i class="fa-solid fa-trash ${isOnlyCategory ? 'disabled' : ''}" data-action="delete"></i>
+                </div>
+            `;
+            wrap.appendChild(row);
+            row.querySelector('[data-action="rename"]').addEventListener('click', () => openCategoryFormModal(cat));
+            if(!isOnlyCategory) {
+                row.querySelector('[data-action="delete"]').addEventListener('click', () => deleteCategory(cat));
+            }
         });
     }
 
-    // 목록(전체/오늘/즐겨찾기) 드롭다운 선택 표시 갱신
-    function setFcModeUI(mode) {
-        document.querySelectorAll('#fc-list-dropdown .fc-dropdown-item').forEach(item => {
-            item.classList.toggle('active', item.getAttribute('data-mode') === mode);
+    function openCategoryFormModal(cat) {
+        document.getElementById('category-form-title').innerText = cat ? '카테고리 이름 변경' : '새 카테고리';
+        document.getElementById('category-form-id').value = cat ? cat.id : '';
+        document.getElementById('category-form-name').value = cat ? cat.name : '';
+        document.getElementById('category-form-modal').style.display = 'flex';
+    }
+    document.getElementById('btn-add-category').addEventListener('click', () => openCategoryFormModal(null));
+    document.getElementById('close-category-form-modal').addEventListener('click', () => document.getElementById('category-form-modal').style.display = 'none');
+
+    document.getElementById('btn-category-form-save').addEventListener('click', () => {
+        const id = document.getElementById('category-form-id').value;
+        const name = document.getElementById('category-form-name').value.trim();
+        if(!name) return alert('카테고리 이름을 입력해 주세요.');
+        if(id) {
+            const cat = allCategories.find(c => c.id === id);
+            if(cat) cat.name = name;
+        } else {
+            allCategories.push({ id: generateCategoryId(), name });
+        }
+        saveData();
+        refreshFromStorage();
+        document.getElementById('category-form-modal').style.display = 'none';
+    });
+
+    function deleteCategory(cat) {
+        if(allCategories.length <= 1) {
+            alert('마지막 남은 카테고리는 삭제할 수 없습니다.');
+            return;
+        }
+        if(!confirm(`'${cat.name}' 카테고리를 삭제할까요? 저장된 문장은 다른 카테고리로 이동됩니다.`)) return;
+        const remaining = allCategories.filter(c => c.id !== cat.id);
+        const fallbackId = remaining[0].id;
+        allWords.forEach(w => { if(w.categoryId === cat.id) w.categoryId = fallbackId; });
+        allCategories = remaining;
+        openCategoryIds.delete(cat.id);
+        saveData();
+        refreshFromStorage();
+    }
+
+    // ── 플래시카드 ──
+
+    // 현재 선택된 스코프(전체/오늘/즐겨찾기)에 해당하는 원본 문장 목록 (최신순, 카테고리 무관)
+    function getScopeWords(value) {
+        if(value === 'star') {
+            return allWords.filter(w => w.starred === true).sort(byNewest);
+        }
+        if(value === 'today') {
+            const todayStr = new Date().toDateString();
+            return allWords.filter(w => w.createdAt && parseDate(w.createdAt).toDateString() === todayStr).sort(byNewest);
+        }
+        return [...allWords].sort(byNewest);
+    }
+
+    // 현재 플래시카드 모드(스코프 또는 카테고리)에 맞는 원본 문장 목록
+    function getWordsForFcMode() {
+        if(fcMode.type === 'category') {
+            return allWords.filter(w => w.categoryId === fcMode.id).sort(byNewest);
+        }
+        return getScopeWords(fcMode.value);
+    }
+
+    function updateFcModeLabel() {
+        const label = document.getElementById('fc-mode-label');
+        if(fcMode.type === 'category') {
+            label.innerText = getCategoryName(fcMode.id);
+        } else {
+            label.innerText = { all: '전체', today: '오늘', star: '즐겨찾기' }[fcMode.value] || '전체';
+        }
+    }
+
+    function resetFcMode() {
+        fcMode = { type: 'scope', value: 'all' };
+        document.querySelectorAll('#fc-scope-dropdown .fc-dropdown-item').forEach(item => {
+            item.classList.toggle('active', item.getAttribute('data-scope') === 'all');
         });
+        updateFcModeLabel();
     }
 
     function closeAllFcDropdowns() {
-        document.getElementById('fc-list-dropdown').classList.remove('show');
-        document.getElementById('fc-count-dropdown').classList.remove('show');
+        document.getElementById('fc-scope-dropdown').classList.remove('show');
     }
 
-    // 현재 선택된 모드(전체/오늘/즐겨찾기)에 해당하는 원본 문장 목록 (최신순)
-    function getBaseWordsForMode(mode) {
-        if(mode === 'star') {
-            return allWords.filter(w => w.starred === true).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-        }
-        if(mode === 'today') {
-            const todayStr = new Date().toDateString();
-            return allWords.filter(w => w.createdAt && parseDate(w.createdAt).toDateString() === todayStr)
-                .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-        }
-        return [...allWords].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-    }
-
-    // 현재 모드(currentFcDataset) + 개수(currentFcCount) 설정에 맞는 플래시카드 풀 구성
-    // 개수 선택은 전체/오늘/즐겨찾기 모드 모두에 항상 적용됨
-    // forceShuffle이 true면 개수가 'all'이어도 무작위로 섞음 (셔플 버튼용)
+    // 현재 모드에 맞는 플래시카드 풀 구성. forceShuffle이 true면 무작위로 섞음 (셔플 버튼용)
     function buildPoolForCurrentSelection(forceShuffle) {
-        const baseWords = getBaseWordsForMode(currentFcDataset);
+        const baseWords = getWordsForFcMode();
         let pool = buildFlashcardPool(baseWords);
-        const countLimit = currentFcCount;
 
-        if(countLimit !== 'all' || forceShuffle) {
+        if(forceShuffle) {
             // Fisher-Yates 셔플
             for(let i = pool.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [pool[i], pool[j]] = [pool[j], pool[i]];
             }
         }
-        if(countLimit !== 'all') {
-            pool = pool.slice(0, countLimit);
-        }
         return pool;
     }
 
-    // 이미 구성된 카드 풀을 바로 로드 (모드/개수 변경 시 사용)
+    // 이미 구성된 카드 풀을 바로 로드 (모드 변경 시 사용)
     function loadFlashcardPool(pool) {
         flashcardPool = pool;
         currentFlashIndex = 0;
@@ -1041,39 +1308,30 @@
         showFlashcard();
     }
 
-    // 목록 버튼(원형) 클릭 → 전체/오늘/즐겨찾기 드롭다운 토글
-    document.getElementById('fc-btn-list').addEventListener('click', (e) => {
+    // 스코프 버튼(원형) 클릭 → 전체/오늘/즐겨찾기 드롭다운 토글
+    document.getElementById('fc-btn-scope').addEventListener('click', (e) => {
         e.stopPropagation();
-        const menu = document.getElementById('fc-list-dropdown');
+        const menu = document.getElementById('fc-scope-dropdown');
         const wasOpen = menu.classList.contains('show');
         closeAllFcDropdowns();
         if(!wasOpen) menu.classList.add('show');
     });
 
-    // 개수 버튼(원형) 클릭 → 30/40/50 드롭다운 토글
-    document.getElementById('fc-btn-count').addEventListener('click', (e) => {
-        e.stopPropagation();
-        const menu = document.getElementById('fc-count-dropdown');
-        const wasOpen = menu.classList.contains('show');
-        closeAllFcDropdowns();
-        if(!wasOpen) menu.classList.add('show');
-    });
-
-    // 목록 드롭다운 항목 선택 (전체/오늘/즐겨찾기)
-    document.querySelectorAll('#fc-list-dropdown .fc-dropdown-item').forEach(item => {
+    // 스코프 드롭다운 항목 선택 (전체/오늘/즐겨찾기) - 카테고리 상관없이 전체 문장 대상
+    document.querySelectorAll('#fc-scope-dropdown .fc-dropdown-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.stopPropagation();
-            const mode = item.getAttribute('data-mode');
+            const scope = item.getAttribute('data-scope');
 
-            if(mode === 'today') {
-                const todayWords = getBaseWordsForMode('today');
+            if(scope === 'today') {
+                const todayWords = getScopeWords('today');
                 if(todayWords.length === 0) {
                     showInlineToast('📅', '오늘 추가한 문장이 없습니다!');
                     closeAllFcDropdowns();
                     return;
                 }
-            } else if(mode === 'star') {
-                const starredWords = getBaseWordsForMode('star');
+            } else if(scope === 'star') {
+                const starredWords = getScopeWords('star');
                 if(starredWords.length === 0) {
                     showInlineToast('⭐', '즐겨찾기한 문장이 없습니다!');
                     closeAllFcDropdowns();
@@ -1081,15 +1339,46 @@
                 }
             }
 
-            currentFcDataset = mode;
-            setFcModeUI(mode);
+            fcMode = { type: 'scope', value: scope };
+            document.querySelectorAll('#fc-scope-dropdown .fc-dropdown-item').forEach(it => it.classList.toggle('active', it === item));
+            updateFcModeLabel();
             closeAllFcDropdowns();
             loadFlashcardPool(buildPoolForCurrentSelection(false));
         });
     });
 
-    // 바깥 영역 클릭 시 열려있는 드롭다운 닫기
-    document.addEventListener('click', () => closeAllFcDropdowns());
+    // 카테고리 버튼 클릭 → 중앙 팝업으로 카테고리 목록 표시
+    document.getElementById('fc-btn-category').addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeAllFcDropdowns();
+        openFcCategoryModal();
+    });
+
+    function openFcCategoryModal() {
+        const listEl = document.getElementById('fc-category-list');
+        listEl.innerHTML = '';
+        getCategoriesOrdered().forEach(cat => {
+            const words = allWords.filter(w => w.categoryId === cat.id);
+            const item = document.createElement('div');
+            item.className = 'fc-category-item' + (fcMode.type === 'category' && fcMode.id === cat.id ? ' active' : '');
+            item.innerHTML = `<span>${escapeHtml(cat.name)}</span><span class="fc-category-item-count">${totalCardCount(words)}</span>`;
+            item.addEventListener('click', () => {
+                if(words.length === 0) {
+                    showInlineToast('📭', '저장된 문장이 없는 카테고리입니다!');
+                    return;
+                }
+                fcMode = { type: 'category', id: cat.id };
+                updateFcModeLabel();
+                document.getElementById('fc-category-modal').style.display = 'none';
+                loadFlashcardPool(buildPoolForCurrentSelection(false));
+            });
+            listEl.appendChild(item);
+        });
+        document.getElementById('fc-category-modal').style.display = 'flex';
+    }
+    document.getElementById('close-fc-category-modal').addEventListener('click', () => {
+        document.getElementById('fc-category-modal').style.display = 'none';
+    });
 
     function buildFlashcardPool(sourceArray) {
         const pool = [];
@@ -1146,13 +1435,13 @@
         }, 280); // 0.28초 뒤 피드백 컬러 소멸
     }
 
-    // [셔플] 버튼 누를 시 현재 활성화된 모드(전체/오늘/즐겨찾기)를 셔플 처리
+    // [셔플] 버튼: 전체 문장(스코프) 선택 상태면 전체를 셔플, 카테고리 선택 상태면 그 카테고리만 셔플
     document.getElementById('fc-btn-shuffle').addEventListener('click', (e) => {
         e.stopPropagation();
         closeAllFcDropdowns();
         triggerBtnFlash('fc-btn-shuffle');
 
-        const baseWords = getBaseWordsForMode(currentFcDataset);
+        const baseWords = getWordsForFcMode();
         if(baseWords.length === 0) return;
 
         isCardRevealed = false;
@@ -1231,15 +1520,9 @@
         }
     }
 
-    // 검색 필터
-    document.getElementById('search-input').addEventListener('input', (e) => {
-        const val = e.target.value.toLowerCase();
-        const filtered = allWords.filter(w => 
-            w.korean.toLowerCase().includes(val) || 
-            w.english.toLowerCase().includes(val) ||
-            (w.memo && w.memo.toLowerCase().includes(val))
-        );
-        renderWordList(filtered);
+    // 검색 필터 (카테고리 상관없이 전체 문장 대상)
+    document.getElementById('search-input').addEventListener('input', () => {
+        renderHome();
     });
 
     function showInlineToast(emoji, msg, duration = 2200) {
@@ -1252,8 +1535,12 @@
 
     // Firebase 준비되면 데이터 로드 후 앱 시작
     window.addEventListener('firebase-ready', async () => {
-        allWords = await loadWordsFromFirebase();
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(allWords)); } catch {}
+        const data = await loadDataFromFirebase();
+        allWords = data.words;
+        allCategories = data.categories || [];
+        const migrated = ensureCategories();
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ words: allWords, categories: allCategories })); } catch {}
+        if(migrated) { await saveData(); }
         const overlay = document.getElementById('firebase-loading');
         overlay.classList.add('hide');
         setTimeout(() => overlay.style.display = 'none', 400);
@@ -1264,7 +1551,10 @@
     setTimeout(async () => {
         const overlay = document.getElementById('firebase-loading');
         if (!overlay.classList.contains('hide')) {
-            allWords = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } })();
+            const data = loadDataFromLocalStorage();
+            allWords = data.words;
+            allCategories = data.categories || [];
+            ensureCategories();
             overlay.classList.add('hide');
             setTimeout(() => overlay.style.display = 'none', 400);
             refreshFromStorage();
