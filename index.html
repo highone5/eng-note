@@ -303,6 +303,33 @@
         .color-picker { display: flex; flex-wrap: wrap; gap: 15px; }
         .color-dot { width: 38px; height: 38px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.2s; }
         .color-dot.active { border-color: #333; transform: scale(1.1); }
+
+        /* 설정 탭 - 음성(TTS) 선택 (드롭다운 형식) */
+        .voice-select-wrap { position: relative; }
+        .voice-select-trigger {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 13px 16px; border-radius: 12px; background: #f2f2f7;
+            font-size: 15px; font-weight: 700; color: var(--text-main);
+            cursor: pointer; transition: background-color 0.15s;
+        }
+        .voice-select-trigger:hover { background: #e5e5ea; }
+        .voice-select-trigger i { color: var(--text-sub); font-size: 13px; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        .voice-select-wrap.open .voice-select-trigger i { transform: rotate(180deg); }
+        .voice-select-dropdown {
+            display: none; position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+            background: #fff; border-radius: 16px; padding: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.04);
+            z-index: 30;
+        }
+        .voice-select-dropdown.show { display: block; animation: voiceDropdownIn 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes voiceDropdownIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .voice-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-main); transition: background-color 0.15s; }
+        .voice-item:hover { background: #f2f2f7; }
+        .voice-item.active { color: var(--primary-color); background: rgba(255,127,80,0.08); }
+        .voice-item i { color: var(--primary-color); }
         
         .english-blur-box, .en-txt {
             font-family: var(--english-font) !important;
@@ -432,6 +459,18 @@
                     <div class="color-dot" style="background: #195A9C;" data-color="#195A9C"></div>
                     <div class="color-dot" style="background: #7A619F;" data-color="#7A619F"></div>
                 </div>
+            </div>
+        </div>
+
+        <!-- 음성(TTS) 선택 (iOS Safari에서는 시스템 음성을 그대로 사용하므로 숨김) -->
+        <div class="settings-section" id="sec-voice" style="display:none;">
+            <h3>음성 선택</h3>
+            <div class="voice-select-wrap" id="voice-select-wrap">
+                <div class="voice-select-trigger" id="voice-select-trigger">
+                    <span id="voice-select-current">음성 선택</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="voice-select-dropdown" id="voice-list"></div>
             </div>
         </div>
 
@@ -778,6 +817,7 @@
         } else if(tabId === 'tab-setting') {
             fab.style.display = 'none';
             renderCategoryManageList();
+            renderVoiceSettings();
         } else if(tabId === 'tab-home') {
             fab.style.display = 'flex';
         } else {
@@ -844,29 +884,122 @@
     });
 
     // TTS 음성 출력 엔진 (플랫폼별 최고 품질 음성 고정)
-    // Android/Chrome → Google US English | iOS Safari → Samantha
+    // Android/Chrome → Google US English | iOS Safari → 시스템 기본 음성
+    // Windows/Edge → 설정 탭에서 사용자가 고른 음성 (Jenny/Aria/Ava/Andrew/Guy) 우선 사용
     let _ttsVoice = null;
+    const TTS_VOICE_STORAGE_KEY = 'eng-note-tts-voice-name';
+
+    // 설정 탭에 노출할 음성 목록 (Edge/Windows 'Online (Natural)' 음성 기준)
+    const TTS_VOICE_TARGETS = [
+        { match: 'Jenny', label: 'Jenny' },
+        { match: 'Aria', label: 'Aria' },
+        { match: 'Ava', label: 'Ava' },
+        { match: 'Andrew', label: 'Andrew' },
+        { match: 'Guy', label: 'Guy' }
+    ];
+
+    function isIOSDevice() {
+        return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
 
     function _loadTTSVoice() {
         const voices = window.speechSynthesis.getVoices();
         if (voices.length === 0) return;
 
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-        if (isIOS) {
-            // iOS Safari: 시스템 기본 음성 사용 (설정에서 지정한 음성 그대로 나옴)
+        if (isIOSDevice()) {
+            // iOS Safari: 시스템 기본 음성 사용 (기존 동작 그대로 유지)
             _ttsVoice = null;
         } else {
-            // Android / Chrome: Google US English
-            _ttsVoice = voices.find(v => v.name === 'Google US English')
+            // Windows/Edge 등: 사용자가 설정 탭에서 고른 음성이 있으면 우선 사용
+            const savedVoiceName = localStorage.getItem(TTS_VOICE_STORAGE_KEY);
+            const savedVoice = savedVoiceName ? voices.find(v => v.name === savedVoiceName) : null;
+
+            _ttsVoice = savedVoice
+                     || voices.find(v => v.name === 'Google US English')
                      || voices.find(v => v.name.includes('Google') && v.lang === 'en-US')
                      || voices.find(v => v.lang === 'en-US');
         }
     }
 
+    // 설정 탭 - 음성 선택 드롭다운 렌더링 (iOS에서는 섹션 자체를 숨김)
+    function renderVoiceSettings() {
+        const section = document.getElementById('sec-voice');
+        const listEl = document.getElementById('voice-list');
+        const currentLabelEl = document.getElementById('voice-select-current');
+        if (!section || !listEl) return;
+
+        if (isIOSDevice() || !window.speechSynthesis) {
+            section.style.display = 'none';
+            return;
+        }
+
+        const voices = window.speechSynthesis.getVoices();
+        if (!voices || voices.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        const matched = [];
+        TTS_VOICE_TARGETS.forEach(t => {
+            const v = voices.find(v => v.name.includes(t.match) && v.lang && v.lang.startsWith('en'));
+            if (v) matched.push({ voice: v, label: t.label });
+        });
+
+        if (matched.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+        const savedVoiceName = localStorage.getItem(TTS_VOICE_STORAGE_KEY);
+        // 저장된 선택이 없으면 현재 적용 중인 음성을 기준으로 표시
+        const activeName = savedVoiceName || (_ttsVoice ? _ttsVoice.name : null);
+        const activeMatch = matched.find(m => m.voice.name === activeName);
+        currentLabelEl.innerText = activeMatch ? activeMatch.label : matched[0].label;
+
+        listEl.innerHTML = '';
+        matched.forEach(m => {
+            const isActive = activeName ? (activeName === m.voice.name) : (m === matched[0]);
+            const item = document.createElement('div');
+            item.className = 'voice-item' + (isActive ? ' active' : '');
+            item.innerHTML = `<span>${escapeHtml(m.label)}</span>` + (isActive ? '<i class="fa-solid fa-check"></i>' : '');
+            item.addEventListener('click', () => {
+                localStorage.setItem(TTS_VOICE_STORAGE_KEY, m.voice.name);
+                _ttsVoice = m.voice;
+                closeVoiceDropdown();
+                renderVoiceSettings();
+            });
+            listEl.appendChild(item);
+        });
+    }
+
+    function closeVoiceDropdown() {
+        const wrap = document.getElementById('voice-select-wrap');
+        if (wrap) wrap.classList.remove('open');
+        const dropdown = document.getElementById('voice-list');
+        if (dropdown) dropdown.classList.remove('show');
+    }
+
+    document.getElementById('voice-select-trigger').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wrap = document.getElementById('voice-select-wrap');
+        const dropdown = document.getElementById('voice-list');
+        const wasOpen = dropdown.classList.contains('show');
+        closeVoiceDropdown();
+        if (!wasOpen) {
+            wrap.classList.add('open');
+            dropdown.classList.add('show');
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        const wrap = document.getElementById('voice-select-wrap');
+        if (wrap && !wrap.contains(e.target)) closeVoiceDropdown();
+    });
+
     // 음성 목록이 비동기로 로드되므로 이벤트 + 즉시 시도 둘 다 처리
     if (window.speechSynthesis) {
-        window.speechSynthesis.onvoiceschanged = _loadTTSVoice;
+        window.speechSynthesis.onvoiceschanged = () => { _loadTTSVoice(); renderVoiceSettings(); };
         _loadTTSVoice();
     }
 
@@ -878,7 +1011,7 @@
         utterance.lang = 'en-US';
         if (!_ttsVoice) _loadTTSVoice(); // 혹시 아직 로드 안 됐으면 재시도
         if (_ttsVoice) utterance.voice = _ttsVoice;
-        utterance.rate = 0.85;
+        utterance.rate = 0.95;
         window.speechSynthesis.speak(utterance);
     }
 
