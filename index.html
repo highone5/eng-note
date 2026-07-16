@@ -330,6 +330,18 @@
         .voice-item:hover { background: #f2f2f7; }
         .voice-item.active { color: var(--primary-color); background: rgba(255,127,80,0.08); }
         .voice-item i { color: var(--primary-color); }
+
+        /* 설정 탭 - 재생 속도 슬라이더 */
+        .speed-control-block { margin-top: 18px; }
+        .speed-control-block.no-top-margin { margin-top: 0; }
+        .speed-control-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+        .speed-control-header .speed-title { font-size: 13px; font-weight: 700; color: #48484a; }
+        .speed-control-header .speed-value { font-size: 14px; font-weight: 800; color: var(--primary-color); }
+        .speed-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 5px; border-radius: 3px; background: #e5e5ea; outline: none; accent-color: var(--primary-color); }
+        .speed-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--primary-color); cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        .speed-slider::-moz-range-thumb { width: 20px; height: 20px; border: none; border-radius: 50%; background: var(--primary-color); cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        .speed-tick-labels { display: flex; justify-content: space-between; margin-top: 6px; }
+        .speed-tick-labels span { font-size: 10px; color: var(--text-sub); font-weight: 600; }
         
         .english-blur-box, .en-txt {
             font-family: var(--english-font) !important;
@@ -462,15 +474,27 @@
             </div>
         </div>
 
-        <!-- 음성(TTS) 선택 (iOS Safari에서는 시스템 음성을 그대로 사용하므로 숨김) -->
-        <div class="settings-section" id="sec-voice" style="display:none;">
-            <h3>음성 선택</h3>
-            <div class="voice-select-wrap" id="voice-select-wrap">
-                <div class="voice-select-trigger" id="voice-select-trigger">
-                    <span id="voice-select-current">음성 선택</span>
-                    <i class="fa-solid fa-chevron-down"></i>
+        <!-- 음성/속도 설정 (음성 목록은 iOS Safari에서 시스템 음성을 그대로 사용하므로 숨김) -->
+        <div class="settings-section" id="sec-voice">
+            <h3>음성 설정</h3>
+            <div id="voice-picker-block" style="display:none;">
+                <div class="voice-select-wrap" id="voice-select-wrap">
+                    <div class="voice-select-trigger" id="voice-select-trigger">
+                        <span id="voice-select-current">음성 선택</span>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="voice-select-dropdown" id="voice-list"></div>
                 </div>
-                <div class="voice-select-dropdown" id="voice-list"></div>
+            </div>
+            <div class="speed-control-block" id="speed-control-block">
+                <div class="speed-control-header">
+                    <span class="speed-title">재생 속도</span>
+                    <span class="speed-value" id="speed-value-label">0.95x</span>
+                </div>
+                <input type="range" class="speed-slider" id="speed-slider" min="0.90" max="1.20" step="0.05" value="0.95">
+                <div class="speed-tick-labels">
+                    <span>0.90</span><span>0.95</span><span>1.00</span><span>1.05</span><span>1.10</span><span>1.15</span><span>1.20</span>
+                </div>
             </div>
         </div>
 
@@ -818,6 +842,7 @@
             fab.style.display = 'none';
             renderCategoryManageList();
             renderVoiceSettings();
+            renderSpeedControl();
         } else if(tabId === 'tab-home') {
             fab.style.display = 'flex';
         } else {
@@ -888,6 +913,9 @@
     // Windows/Edge → 설정 탭에서 사용자가 고른 음성 (Jenny/Aria/Ava/Andrew/Guy) 우선 사용
     let _ttsVoice = null;
     const TTS_VOICE_STORAGE_KEY = 'eng-note-tts-voice-name';
+    const TTS_RATE_STORAGE_KEY = 'eng-note-tts-rate';
+    const TTS_RATE_DEFAULT = 0.95;
+    const TTS_RATE_STEPS = ['0.90', '0.95', '1.00', '1.05', '1.10', '1.15', '1.20'];
 
     // 설정 탭에 노출할 음성 목록 (Edge/Windows 'Online (Natural)' 음성 기준)
     const TTS_VOICE_TARGETS = [
@@ -900,6 +928,12 @@
 
     function isIOSDevice() {
         return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
+
+    function getSavedTTSRate() {
+        const saved = parseFloat(localStorage.getItem(TTS_RATE_STORAGE_KEY));
+        if (!isNaN(saved) && saved >= 0.90 && saved <= 1.20) return saved;
+        return TTS_RATE_DEFAULT;
     }
 
     function _loadTTSVoice() {
@@ -921,21 +955,21 @@
         }
     }
 
-    // 설정 탭 - 음성 선택 드롭다운 렌더링 (iOS에서는 섹션 자체를 숨김)
+    // 설정 탭 - 음성 선택 드롭다운 렌더링 (iOS에서는 음성 선택 블록만 숨김, 속도 슬라이더는 계속 노출)
     function renderVoiceSettings() {
-        const section = document.getElementById('sec-voice');
+        const pickerBlock = document.getElementById('voice-picker-block');
         const listEl = document.getElementById('voice-list');
         const currentLabelEl = document.getElementById('voice-select-current');
-        if (!section || !listEl) return;
+        if (!pickerBlock || !listEl) return;
 
         if (isIOSDevice() || !window.speechSynthesis) {
-            section.style.display = 'none';
+            pickerBlock.style.display = 'none';
             return;
         }
 
         const voices = window.speechSynthesis.getVoices();
         if (!voices || voices.length === 0) {
-            section.style.display = 'none';
+            pickerBlock.style.display = 'none';
             return;
         }
 
@@ -946,11 +980,11 @@
         });
 
         if (matched.length === 0) {
-            section.style.display = 'none';
+            pickerBlock.style.display = 'none';
             return;
         }
 
-        section.style.display = 'block';
+        pickerBlock.style.display = 'block';
         const savedVoiceName = localStorage.getItem(TTS_VOICE_STORAGE_KEY);
         // 저장된 선택이 없으면 현재 적용 중인 음성을 기준으로 표시
         const activeName = savedVoiceName || (_ttsVoice ? _ttsVoice.name : null);
@@ -997,6 +1031,30 @@
         if (wrap && !wrap.contains(e.target)) closeVoiceDropdown();
     });
 
+    // 설정 탭 - 재생 속도 슬라이더 (0.90 ~ 1.20, 0.05 단위 / 모든 플랫폼 공통)
+    function renderSpeedControl() {
+        const slider = document.getElementById('speed-slider');
+        const label = document.getElementById('speed-value-label');
+        if (!slider || !label) return;
+        const rate = getSavedTTSRate();
+        slider.value = rate.toFixed(2);
+        label.innerText = rate.toFixed(2) + 'x';
+    }
+
+    const _speedSliderEl = document.getElementById('speed-slider');
+    if (_speedSliderEl) {
+        _speedSliderEl.addEventListener('input', () => {
+            // 슬라이더 값은 0.05 단위 step이지만, 부동소수점 오차 보정을 위해 가장 가까운 지정값으로 스냅
+            const raw = parseFloat(_speedSliderEl.value);
+            let snapped = TTS_RATE_STEPS.map(Number).reduce((closest, v) =>
+                Math.abs(v - raw) < Math.abs(closest - raw) ? v : closest
+            );
+            localStorage.setItem(TTS_RATE_STORAGE_KEY, snapped.toFixed(2));
+            document.getElementById('speed-value-label').innerText = snapped.toFixed(2) + 'x';
+        });
+    }
+    renderSpeedControl();
+
     // 음성 목록이 비동기로 로드되므로 이벤트 + 즉시 시도 둘 다 처리
     if (window.speechSynthesis) {
         window.speechSynthesis.onvoiceschanged = () => { _loadTTSVoice(); renderVoiceSettings(); };
@@ -1011,7 +1069,7 @@
         utterance.lang = 'en-US';
         if (!_ttsVoice) _loadTTSVoice(); // 혹시 아직 로드 안 됐으면 재시도
         if (_ttsVoice) utterance.voice = _ttsVoice;
-        utterance.rate = 0.95;
+        utterance.rate = getSavedTTSRate();
         window.speechSynthesis.speak(utterance);
     }
 
