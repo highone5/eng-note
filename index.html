@@ -67,9 +67,6 @@
         
         .app-container { width: 100%; max-width: 500px; background: var(--bg-color); min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 25px rgba(0,0,0,0.04); padding-bottom: 90px; }
         
-        /* 헤더 디자인 */
-        header { padding: 20px; text-align: left; background: #fff; font-size: 24px; font-weight: bold; letter-spacing: 0.5px; cursor: pointer; border-bottom: 1px solid #f2f2f7; }
-        header span { color: var(--primary-color); }
         
         /* 탭 화면 제어 */
         .tab-content { display: none; padding: 20px; flex: 1; }
@@ -78,79 +75,85 @@
         #tab-flashcard .flashcard-area { flex: 1; }
         
         .dashboard-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 12px; 
-            margin-bottom: 22px; 
-        }
-        /* iOS 스타일의 더 깔끔하고 심플해진 정보 집중형 대시보드 카드 */
-        .dash-card { 
-            background: #fff; 
-            border: 1px solid #f2f2f7; 
-            border-radius: 16px; 
-            padding: 14px 10px; 
-            text-align: center; 
-            cursor: pointer; 
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); 
             display: flex; 
-            flex-direction: column; 
+            gap: 22px; 
+            margin-bottom: 20px; 
+        }
+        /* 노션 스타일 탭: 배경/테두리 없이 선택된 것만 밑줄 표시 */
+        .dash-card { 
+            background: transparent; 
+            border: none;
+            border-bottom: 2px solid transparent;
+            border-radius: 0; 
+            padding: 2px 0 9px; 
+            text-align: left; 
+            cursor: pointer; 
+            transition: border-color 0.2s; 
+            display: flex; 
+            flex-direction: row; 
             align-items: center; 
-            justify-content: center; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.01);
+            gap: 6px;
+            box-shadow: none;
         }
         .dash-card:active {
-            transform: scale(0.96);
-            background-color: #f2f2f7;
+            transform: none;
+            background-color: transparent;
         }
         .dash-card.active { 
-            border-color: var(--primary-color); 
-            background: #fff;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.02);
+            border-bottom-color: var(--primary-color); 
+            background: transparent;
+            box-shadow: none;
         }
         .dash-card-label { 
-            font-size: 13px; 
-            font-weight: 700; 
-            color: #48484a; 
-            margin-bottom: 8px;
+            font-size: 14px; 
+            font-weight: 600; 
+            color: #9b9a97; 
+            margin-bottom: 0;
         }
         .dash-card.active .dash-card-label { 
             color: var(--text-main); 
+            font-weight: 700;
         }
         .dash-card-badge { 
             display: inline-block; 
-            background: #e5e5ea; 
-            color: #8e8e93; 
-            padding: 2px 10px; 
-            border-radius: 12px; 
-            font-size: 11px; 
-            font-weight: bold; 
-            transition: all 0.2s;
+            background: transparent; 
+            color: #c4c3bf; 
+            padding: 0; 
+            border-radius: 0; 
+            font-size: 12px; 
+            font-weight: 700; 
+            transition: color 0.2s;
         }
         .dash-card.active .dash-card-badge {
-            background: var(--primary-color);
-            color: white;
+            background: transparent;
+            color: var(--primary-color);
         }
         
-        .search-box { position: relative; margin-bottom: 20px; }
-        .search-box input { width: 100%; padding: 12px 15px 12px 42px; border: 1px solid #e5e5ea; border-radius: 25px; font-size: 14px; background: #fff; outline: none; transition: border-color 0.2s; }
-        .search-box input:focus { border-color: var(--primary-color); }
-        .search-box i { position: absolute; left: 16px; top: 15px; color: var(--text-sub); font-size: 15px; }
-        
-        /* 문장 카드 스타일 */
-        .word-card { background: #fff; border: 1px solid #f2f2f7; border-radius: 24px; padding: 22px; margin-bottom: 15px; box-shadow: 0 4px 16px rgba(0,0,0,0.015); position: relative; }
-        .card-header { margin-bottom: 0; }
-        .card-actions { display: flex; gap: 14px; color: var(--text-sub); cursor: pointer; font-size: 15px; align-items: center; justify-content: flex-end; margin-bottom: 8px; }
-        .card-actions i.fa-star.active { color: #ffca28; }
-        .card-actions i:hover { color: var(--primary-color); }
-        .korean-txt { font-size: 18px; font-weight: 700; margin-bottom: 8px; line-height: 1.4; color: var(--text-main); }
-        
-        .english-blur-box { font-size: 16px; color: var(--text-main); font-weight: normal; font-family: var(--english-font) !important; margin-bottom: 12px; line-height: 1.5; display: block; }
+        .search-box { position: relative; margin-bottom: 22px; border-bottom: 1px solid #eeece9; padding-bottom: 10px; }
+        .search-box input { width: 100%; padding: 2px 4px 2px 24px; border: none; border-radius: 0; font-size: 14px; background: transparent; outline: none; color: var(--text-main); }
+        .search-box input:focus { border-color: transparent; }
+        .search-box i { position: absolute; left: 2px; top: 3px; color: var(--text-sub); font-size: 13px; }
 
-        /* 연결 문장 리스트 디자인 */
-        .link-section { border-top: 1px solid #e5e5ea; padding-top: 12px; margin-top: 12px; }
-        .link-item { background: #fafafa; border: 1px solid #f2f2f7; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .link-item .en-txt { font-weight: normal; font-size: 14px; color: var(--text-main); font-family: var(--english-font) !important; }
-        
+        /* 문장 리스트 - 노션 스타일 (박스 없이 여백/구분선으로만 구분) */
+        #word-list-container { border-top: 1px solid #eeece9; }
+        .sentence-row { padding: 16px 4px; border-bottom: 1px solid #eeece9; }
+        .sentence-row:last-child { border-bottom: none; }
+        .sentence-main { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+        .sentence-text-wrap { flex: 1; min-width: 0; }
+        .sentence-kr-row { display: flex; align-items: baseline; gap: 6px; }
+        .sentence-kr { font-size: 16px; font-weight: 600; color: var(--text-main); line-height: 1.6; word-break: keep-all; }
+        .sentence-en { font-size: 14px; font-weight: 400; color: var(--text-main); line-height: 1.6; margin-top: 3px; font-family: var(--english-font) !important; cursor: pointer; }
+        .sentence-star { font-size: 11px; color: #e0a132; flex-shrink: 0; }
+        .sentence-actions { display: flex; gap: 6px; flex-shrink: 0; margin-top: 1px; color: #c4c3bf; font-size: 13px; }
+        .sentence-actions i { cursor: pointer; transition: color 0.15s; padding: 6px; }
+        .sentence-actions i:hover { color: var(--primary-color); }
+
+        .link-list { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; }
+        .link-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding-left: 14px; border-left: 2px solid #eeece9; }
+
+        /* 검색 결과에서 일치하는 부분 하이라이트 */
+        mark.search-highlight { background: #fdecc8; color: inherit; border-radius: 2px; padding: 0 1px; }
+
         .add-link-btn { color: var(--text-sub); font-size: 12px; cursor: pointer; font-weight: 500; display: inline-block; margin-top: 5px; transition: color 0.2s; }
         .add-link-btn:hover { color: var(--primary-color); }
         
@@ -172,42 +175,48 @@
         
         .form-group { margin-bottom: 18px; }
         .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 8px; color: #48484a; }
-        .form-group input { width: 100%; padding: 13px; border: 1px solid #e5e5ea; border-radius: 12px; background: #f2f2f7; font-size: 15px; outline: none; transition: border-color 0.2s; }
+        .form-group input { width: 100%; padding: 13px; border: 1px solid #eeece9; border-radius: 12px; background: #f7f6f3; font-size: 15px; outline: none; transition: border-color 0.2s; }
         .form-group input:focus { border-color: var(--primary-color); background: #fff; }
         
         .modal-btns { display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
         /* 일률적이고 깔끔한 그레이 톤으로 정렬된 iOS 알림형 버튼 가이드 적용 */
         .btn { flex: 1; padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 600; border: none; cursor: pointer; text-align: center; min-width: 80px; transition: background-color 0.2s, transform 0.1s; }
         .btn:active { transform: scale(0.97); }
-        .btn-cancel { background: #f2f2f7; color: #3a3a3c; }
-        .btn-cancel:hover { background: #e5e5ea; }
+        .btn-cancel { background: #f7f6f3; color: #37352f; }
+        .btn-cancel:hover { background: #eeece9; }
         .btn-submit { background: var(--primary-color); color: white; }
 
         /* 플래시카드 상단 진행 카운터 (예: 6 / 13) */
         .fc-progress-wrap { text-align: center; margin-bottom: 14px; }
-        .fc-progress-wrap span { font-size: 14px; font-weight: 700; color: #8E8E93; letter-spacing: 0.3px; }
+        .fc-progress-wrap span { font-size: 14px; font-weight: 700; color: #9b9a97; letter-spacing: 0.3px; }
 
-        /* 플래시카드 하단 컨트롤 (목록 / 셔플 / 개수 원형 버튼) */
+        /* 플래시카드 하단 컨트롤 (카테고리 / 셔플 / 발음 원형 버튼) - 홈 화면과 톤 통일 */
         .fc-control-bar { display: flex; gap: 14px; justify-content: center; margin-top: 22px; }
         .fc-icon-btn-wrap { position: relative; }
 
         .fc-icon-btn {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
-            border: none;
+            border: 1px solid #eeece9;
             background: #ffffff;
-            color: #6d6d72;
-            font-size: 17px;
+            color: #9b9a97;
+            font-size: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.03);
+            box-shadow: none;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        .fc-icon-btn:hover { color: var(--primary-color); border-color: var(--primary-color); }
         .fc-icon-btn:active { transform: scale(0.9); }
-        .fc-icon-btn.flash { background: var(--primary-color); color: #fff; transform: scale(0.94); }
+        .fc-icon-btn.flash { background: var(--primary-color); border-color: var(--primary-color); color: #fff; transform: scale(0.94); }
+
+        /* 플래시카드 스와이프 채점 피드백 오버레이 */
+        .fc-swipe-indicator { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 64px; opacity: 0; pointer-events: none; transition: opacity 0.1s linear; z-index: 5; }
+        .fc-swipe-indicator.right i { color: #34C759; }
+        .fc-swipe-indicator.left i { color: #FF3B30; }
 
         .fc-count-btn { font-size: 12px; font-weight: 800; letter-spacing: 0.2px; }
         .fc-count-btn.selected { color: var(--primary-color); }
@@ -251,15 +260,16 @@
         .inline-toast .it-emoji { font-size: 32px; margin-bottom: 10px; display: block; }
         .inline-toast .it-msg { font-size: 15px; font-weight: bold; color: var(--text-main); line-height: 1.6; }
 
-        /* 플래시카드 (정확히 반반으로 나뉜 2단 구조: 위-한국어 / 아래-영어, 재생버튼은 카드 우상단 고정) */
+        /* 플래시카드 (정확히 반반으로 나뉜 2단 구조: 위-한국어 / 아래-영어) - 홈 화면과 톤을 맞춘 플랫한 스타일 */
         .flashcard-area {
             display: flex;
             flex-direction: column;
-            background: transparent;
-            border-radius: 28px;
+            background: #fff;
+            border: 1px solid #eeece9;
+            border-radius: 14px;
             margin-bottom: 0;
             overflow: hidden;
-            box-shadow: 0 12px 36px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.02);
+            box-shadow: none;
             user-select: none;
             position: relative;
             min-height: 300px;
@@ -267,9 +277,7 @@
         }
         .fc-top-section {
             flex: 1 1 50%;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: #fff;
             padding: 40px 30px;
             text-align: center;
             cursor: pointer;
@@ -279,10 +287,8 @@
         }
         .fc-bottom-section {
             flex: 1 1 50%;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid #eeeeee;
+            background: #fff;
+            border-top: 1px solid #eeece9;
             padding: 30px;
             text-align: center;
             display: flex;
@@ -297,9 +303,10 @@
         .result-panel { text-align: center; padding: 20px 10px; }
         .result-score { font-size: 46px; font-weight: bold; color: var(--primary-color); margin: 15px 0; letter-spacing: -1px; }
 
-        /* 설정 탭 섹션 */
-        .settings-section { background: #fff; border: 1px solid #f2f2f7; border-radius: 24px; padding: 22px; margin-bottom: 20px; }
-        .settings-section h3 { font-size: 15px; color: #3a3a3c; margin-bottom: 15px; font-weight: bold; }
+        /* 설정 탭 섹션 - 노션 스타일 (박스 없이 구분선으로) */
+        .settings-section { padding: 18px 4px; border-bottom: 1px solid #eeece9; }
+        .settings-section:last-child { border-bottom: none; }
+        .settings-section h3 { font-size: 12px; color: #9b9a97; margin-bottom: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
         .color-picker { display: flex; flex-wrap: wrap; gap: 15px; }
         .color-dot { width: 38px; height: 38px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform 0.2s; }
         .color-dot.active { border-color: #333; transform: scale(1.1); }
@@ -308,11 +315,11 @@
         .voice-select-wrap { position: relative; }
         .voice-select-trigger {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 13px 16px; border-radius: 12px; background: #f2f2f7;
+            padding: 13px 16px; border-radius: 12px; background: #f7f6f3;
             font-size: 15px; font-weight: 700; color: var(--text-main);
             cursor: pointer; transition: background-color 0.15s;
         }
-        .voice-select-trigger:hover { background: #e5e5ea; }
+        .voice-select-trigger:hover { background: #eeece9; }
         .voice-select-trigger i { color: var(--text-sub); font-size: 13px; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
         .voice-select-wrap.open .voice-select-trigger i { transform: rotate(180deg); }
         .voice-select-dropdown {
@@ -343,20 +350,17 @@
         .speed-tick-labels { display: flex; justify-content: space-between; margin-top: 6px; }
         .speed-tick-labels span { font-size: 10px; color: var(--text-sub); font-weight: 600; }
         
-        .english-blur-box, .en-txt {
-            font-family: var(--english-font) !important;
-        }
-
-        /* 카테고리 아코디언 (홈화면) */
-        .category-section { background: #fff; border: 1px solid #f2f2f7; border-radius: 18px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
-        .category-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; cursor: pointer; }
-        .category-header:active { background: #f9f9f9; }
-        .category-header-left { display: flex; align-items: center; gap: 8px; }
-        .category-name { font-size: 15px; font-weight: 700; color: var(--text-main); }
-        .category-count { font-size: 13px; color: var(--text-sub); font-weight: 600; }
-        .category-chevron { color: var(--text-sub); font-size: 14px; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
-        .category-section.open .category-chevron { transform: rotate(180deg); }
-        .category-body { display: none; padding: 0 14px 14px; }
+        
+        /* 카테고리 아코디언 (홈화면) - 노션 스타일 */
+        .category-section { margin-bottom: 2px; }
+        .category-header { display: flex; align-items: center; gap: 6px; padding: 10px 6px; cursor: pointer; border-radius: 4px; }
+        .category-header:hover { background: #f7f6f3; }
+        .category-header-left { display: flex; align-items: center; gap: 6px; }
+        .category-name { font-size: 13px; font-weight: 600; color: var(--text-main); }
+        .category-count { font-size: 12px; color: #c4c3bf; font-weight: 600; }
+        .category-chevron { color: #9b9a97; font-size: 10px; transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        .category-section.open .category-chevron { transform: rotate(90deg); }
+        .category-body { display: none; padding: 2px 0 6px 18px; border-top: 1px solid #eeece9; margin-top: 2px; }
         .category-section.open .category-body { display: block; }
         .category-empty-msg { text-align: center; color: var(--text-sub); font-size: 13px; padding: 20px 0; }
 
@@ -364,7 +368,7 @@
         .card-category-tag { display: inline-block; font-size: 11px; font-weight: 700; color: var(--primary-color); background: rgba(255,127,80,0.1); padding: 3px 10px; border-radius: 10px; margin-bottom: 10px; }
 
         /* 설정 탭 - 카테고리 관리 */
-        .cat-manage-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid #f2f2f7; }
+        .cat-manage-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px; border-bottom: 1px solid #eeece9; }
         .cat-manage-row:last-child { border-bottom: none; }
         .cat-manage-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
         .cat-manage-name { font-size: 14px; font-weight: 700; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -377,7 +381,7 @@
         /* 플래시카드 - 카테고리 선택 팝업 (중앙 모달) */
         .fc-category-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 14px; cursor: pointer; font-size: 15px; font-weight: 600; color: var(--text-main); transition: background-color 0.15s; margin-bottom: 6px; }
         .fc-category-item:hover { background: #f2f2f7; }
-        .fc-category-item.active { color: var(--primary-color); background: rgba(255,127,80,0.08); }
+        .fc-category-item.active { color: var(--primary-color); }
         .fc-category-item .fc-category-item-count { font-size: 12px; color: var(--text-sub); font-weight: 600; }
         .fc-category-item.active .fc-category-item-count { color: var(--primary-color); }
 
@@ -392,7 +396,6 @@
     <p>데이터를 불러오는 중...</p>
 </div>
 <div class="app-container">
-    <header id="app-logo">en<span>clip</span></header>
 
     <!-- 홈화면 탭 -->
     <div id="tab-home" class="tab-content active">
@@ -429,6 +432,7 @@
         </div>
 
         <div class="flashcard-area" id="flashcard-box">
+            <div class="fc-swipe-indicator" id="fc-swipe-indicator"><i class="fa-solid fa-check"></i></div>
             <div class="fc-top-section" id="fc-top-section">
                 <h2 id="fc-korean">저장된 문장이 없습니다.</h2>
             </div>
@@ -438,14 +442,6 @@
         </div>
 
         <div class="fc-control-bar">
-            <div class="fc-icon-btn-wrap">
-                <button class="fc-icon-btn" id="fc-btn-scope"><i class="fa-solid fa-list-check"></i></button>
-                <div class="fc-dropdown-menu" id="fc-scope-dropdown">
-                    <div class="fc-dropdown-item active" data-scope="all">전체</div>
-                    <div class="fc-dropdown-item" data-scope="today">오늘</div>
-                    <div class="fc-dropdown-item" data-scope="star">즐겨찾기</div>
-                </div>
-            </div>
             <div class="fc-icon-btn-wrap">
                 <button class="fc-icon-btn" id="fc-btn-category"><i class="fa-solid fa-folder-open"></i></button>
             </div>
@@ -506,7 +502,7 @@
 
         <div class="settings-section">
             <h3>데이터 동기화 관리</h3>
-            <div style="background: #ffffff; border: 1px solid #f2f2f7; border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <div style="font-weight: 700; font-size: 15px; color: var(--text-main); margin-bottom: 4px;">클라우드 데이터베이스 상태</div>
                     <div style="font-size: 12px; color: var(--text-sub);">Firebase Firestore 실시간 연결됨</div>
@@ -554,7 +550,10 @@
     <!-- 문장 수정 모달 (모든 행동 버튼을 닫기 버튼 색상과 동일하게 심플화) -->
     <div class="modal" id="edit-modal">
         <div class="modal-content">
-            <h3 style="margin-bottom: 20px; font-size: 20px;">문장 관리</h3>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px;">
+                <h3 style="font-size: 20px;">문장 관리</h3>
+                <i class="fa-regular fa-star" id="edit-star-btn" style="font-size:22px; color:var(--text-sub); cursor:pointer;"></i>
+            </div>
             <input type="hidden" id="edit-word-id">
             <div class="form-group">
                 <label>한국어 문장</label>
@@ -599,7 +598,10 @@
     <!-- 연관 문장 관리 모달 (모든 행동 버튼을 닫기 버튼 색상과 동일하게 그레이 톤 처리) -->
     <div class="modal" id="link-edit-modal">
         <div class="modal-content">
-            <h3 style="margin-bottom: 20px; font-size: 20px;">추가 문장 관리</h3>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px;">
+                <h3 style="font-size: 20px;">추가 문장 관리</h3>
+                <i class="fa-regular fa-star" id="link-edit-star-btn" style="font-size:22px; color:var(--text-sub); cursor:pointer;"></i>
+            </div>
             <input type="hidden" id="link-edit-parent-id">
             <input type="hidden" id="link-edit-created-at">
             <div class="form-group">
@@ -641,6 +643,22 @@
             <div id="fc-category-list"></div>
             <div class="modal-btns">
                 <button class="btn btn-cancel" id="close-fc-category-modal">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 플래시카드 결과 팝업 (체크/X 학습 완료 후) -->
+    <div class="modal" id="fc-result-modal">
+        <div class="modal-content">
+            <div class="result-panel">
+                <h3 style="font-size: 20px;">학습 완료!</h3>
+                <div class="result-score" id="fc-result-score">0 / 0</div>
+                <div style="color: var(--text-sub); font-size: 14px; margin-bottom: 4px;" id="fc-result-detail">체크 0개 · X 0개</div>
+            </div>
+            <div class="modal-btns" style="flex-direction: column;">
+                <button class="btn btn-submit" id="btn-fc-result-restart-all" style="width:100%;">처음부터 다시</button>
+                <button class="btn btn-cancel" id="btn-fc-result-retry-wrong" style="width:100%;">X 한 문장만 다시</button>
+                <button class="btn btn-cancel" id="close-fc-result-modal" style="width:100%;">닫기</button>
             </div>
         </div>
     </div>
@@ -722,6 +740,17 @@
         return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
     }
 
+    function escapeRegExp(str) {
+        return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // 검색어와 일치하는 부분을 <mark>로 감싸서 하이라이트 (검색 결과 화면에서만 사용)
+    function highlightMatch(text, term) {
+        if(!term) return text;
+        const re = new RegExp('(' + escapeRegExp(term) + ')', 'gi');
+        return String(text).replace(re, '<mark class="search-highlight">$1</mark>');
+    }
+
     let allWords = [];
     let allCategories = [{ id: 'default', name: '기본' }];
     let lastUsedCategoryId = 'default';
@@ -729,6 +758,7 @@
     let flashcardPool = [];
     let currentFlashIndex = 0;
     let isCardRevealed = false;
+    let flashcardResults = {}; // { cardId: 'known' | 'unknown' } - 이번 학습 세션 동안의 체크/X 기록
 
     // 홈 화면 모드: 'category'(카테고리별 아코디언) | 'all' | 'today' | 'star'
     let currentHomeMode = 'category';
@@ -792,11 +822,12 @@
         const todayLinkCount = todayWords.reduce((sum, w) => sum + (w.links ? w.links.length : 0), 0);
         const todayCount = todayWords.length + todayLinkCount;
 
-        const starCount = words.filter(w => w.starred === true).length;
+        const starCount = words.filter(w => w.starred === true).length
+            + words.reduce((sum, w) => sum + (w.links ? w.links.filter(l => l.starred === true).length : 0), 0);
 
-        document.getElementById('count-all').innerText = allCount;
-        document.getElementById('count-today').innerText = todayCount;
-        document.getElementById('count-star').innerText = starCount;
+        document.getElementById('count-all').innerText = `(${allCount})`;
+        document.getElementById('count-today').innerText = `(${todayCount})`;
+        document.getElementById('count-star').innerText = `(${starCount})`;
     }
 
     // 대시보드 필터 칩 (전체 / 오늘 / 즐겨찾기) - 카테고리 상관없이 전체 문장을 대상으로 함
@@ -816,12 +847,6 @@
     });
     document.getElementById('chip-star').addEventListener('click', () => {
         currentHomeMode = (currentHomeMode === 'star') ? 'category' : 'star';
-        renderHome();
-    });
-    document.getElementById('app-logo').addEventListener('click', () => {
-        document.getElementById('search-input').value = '';
-        currentHomeMode = 'category';
-        switchTab('tab-home');
         renderHome();
     });
 
@@ -1086,7 +1111,8 @@
     // 검색어가 없고 all/today/star: 카테고리 상관없이 해당 조건의 전체 문장을 평면 리스트로 표시
     function renderHome() {
         setActiveChip();
-        const searchVal = document.getElementById('search-input').value.trim().toLowerCase();
+        const searchValRaw = document.getElementById('search-input').value.trim();
+        const searchVal = searchValRaw.toLowerCase();
         const flatContainer = document.getElementById('word-list-container');
         const accordionContainer = document.getElementById('category-accordion-container');
 
@@ -1098,7 +1124,7 @@
                 w.korean.toLowerCase().includes(searchVal) ||
                 w.english.toLowerCase().includes(searchVal)
             ).sort(byNewest);
-            renderWordList(filtered, flatContainer, false);
+            renderWordList(filtered, flatContainer, false, false, searchValRaw);
             return;
         }
 
@@ -1115,16 +1141,18 @@
         flatContainer.style.display = 'block';
 
         let list;
+        let starOnlyLinks = false;
         if(currentHomeMode === 'today') {
             const todayStr = new Date().toDateString();
             list = allWords.filter(w => w.createdAt && parseDate(w.createdAt).toDateString() === todayStr);
         } else if(currentHomeMode === 'star') {
-            list = allWords.filter(w => w.starred === true);
+            list = allWords.filter(w => w.starred === true || (w.links && w.links.some(l => l.starred === true)));
+            starOnlyLinks = true;
         } else {
             list = [...allWords];
         }
         list.sort(byNewest);
-        renderWordList(list, flatContainer, false);
+        renderWordList(list, flatContainer, false, starOnlyLinks);
     }
 
     // 카테고리별 아코디언(드롭다운) 렌더링
@@ -1148,11 +1176,11 @@
             section.className = 'category-section' + (isOpen ? ' open' : '');
             section.innerHTML = `
                 <div class="category-header" data-cat="${cat.id}">
+                    <i class="fa-solid fa-chevron-right category-chevron"></i>
                     <div class="category-header-left">
                         <span class="category-name">${escapeHtml(cat.name)}</span>
-                        <span class="category-count">(${totalCardCount(words)})</span>
+                        <span class="category-count">${totalCardCount(words)}</span>
                     </div>
-                    <i class="fa-solid fa-chevron-down category-chevron"></i>
                 </div>
                 <div class="category-body"></div>
             `;
@@ -1181,7 +1209,8 @@
     // 메인화면 리스트 동적 UI 렌더링
     // container: 렌더링할 대상 (기본: 홈 평면 리스트 컨테이너)
     // inCategoryContext: true면 카테고리 아코디언 내부용(카테고리 태그 숨김)
-    function renderWordList(words, container, inCategoryContext) {
+    // highlightTerm: 검색 결과 화면에서 일치하는 부분을 하이라이트할 검색어
+    function renderWordList(words, container, inCategoryContext, starOnlyLinks, highlightTerm) {
         container = container || document.getElementById('word-list-container');
         container.innerHTML = '';
 
@@ -1201,77 +1230,70 @@
 
         words.forEach(word => {
             const card = document.createElement('div');
-            card.className = 'word-card';
-            
+            card.className = 'sentence-row';
+
+            const linksToShow = (word.links && word.links.length > 0)
+                ? (starOnlyLinks ? word.links.filter(l => l.starred === true) : word.links)
+                : [];
+
+            const wordKoreanHtml = highlightMatch(word.korean, highlightTerm);
+            const wordEnglishHtml = highlightMatch(word.english, highlightTerm);
+
             let linksHtml = '';
-            if(word.links && word.links.length > 0) {
-                linksHtml = `<div class="link-section">`;
-                word.links.forEach(link => {
+            if(linksToShow.length > 0) {
+                linksHtml = `<div class="link-list">`;
+                linksToShow.forEach(link => {
+                    const linkKoreanHtml = highlightMatch(link.korean, highlightTerm);
+                    const linkEnglishHtml = highlightMatch(link.english, highlightTerm);
                     linksHtml += `
-                        <div class="link-item">
-                            <div>
-                                <strong style="font-size:15px; display:block; margin-bottom:8px;">${link.korean}</strong>
-                                <span class="en-txt">${link.english}</span>
-                            </div>
-                            <div style="display:flex; gap:10px; align-items:center;">
-                                <i class="fa-solid fa-volume-high" style="color:var(--text-sub); cursor:pointer; font-size:16px;" id="link-audio-${word.id}-${link.createdAt}"></i>
-                                <i class="fa-solid fa-ellipsis" style="color:var(--text-sub); cursor:pointer; font-size:16px;" id="link-menu-${word.id}-${link.createdAt}"></i>
+                        <div class="link-row" id="link-item-${word.id}-${link.createdAt}">
+                            <div class="sentence-text-wrap">
+                                <div class="sentence-kr-row">
+                                    ${link.starred === true ? '<i class="fa-solid fa-star sentence-star" style="font-size:10px;"></i>' : ''}
+                                    <div class="sentence-kr" style="font-size:14px;">${linkKoreanHtml}</div>
+                                </div>
+                                <div class="sentence-en" id="link-en-${word.id}-${link.createdAt}" style="font-size:13px;">${linkEnglishHtml}</div>
                             </div>
                         </div>`;
                 });
                 linksHtml += `</div>`;
             }
 
-            const isStarred = word.starred === true;
-
             card.innerHTML = `
-                <div class="card-actions">
-                    <i class="fa-star ${isStarred ? 'fa-solid active' : 'fa-regular'}" id="star-${word.id}"></i>
-                    <i class="fa-solid fa-volume-high" id="audio-${word.id}"></i>
-                    <i class="fa-solid fa-ellipsis" id="menu-${word.id}"></i>
+                <div class="sentence-main">
+                    <div class="sentence-text-wrap">
+                        <div class="sentence-kr-row">
+                            ${word.starred === true ? '<i class="fa-solid fa-star sentence-star"></i>' : ''}
+                            <div class="sentence-kr">${wordKoreanHtml}</div>
+                        </div>
+                        <div class="sentence-en" id="en-box-${word.id}">${wordEnglishHtml}</div>
+                        ${linksHtml}
+                    </div>
+                    <div class="sentence-actions">
+                        <i class="fa-solid fa-plus" id="add-link-${word.id}" title="연결문장 추가"></i>
+                    </div>
                 </div>
-                <div class="card-header">
-                    <div class="korean-txt">${word.korean}</div>
-                </div>
-                <div>
-                    <div class="english-blur-box" id="en-box-${word.id}">${word.english}</div>
-                </div>
-                ${linksHtml}
-                <div class="add-link-btn" id="add-link-${word.id}">+ 더하기</div>
             `;
 
             container.appendChild(card);
 
-            const addLinkBtn = card.querySelector(`#add-link-${word.id}`);
-            addLinkBtn.style.fontSize = "12px";
-            addLinkBtn.style.color = "var(--text-sub)";
+            // 영어 문장 탭/클릭 → 발음 재생
+            card.querySelector(`#en-box-${word.id}`).addEventListener('click', (e) => { e.stopPropagation(); speak(word.english); });
 
-            card.querySelector(`#star-${word.id}`).addEventListener('click', (e) => {
-                e.stopPropagation();
-                const target = allWords.find(w => w.id === word.id);
-                if(target) { target.starred = !target.starred; saveData(); refreshFromStorage(); }
-            });
+            // 롱프레스(모바일) / 우클릭(노트북) → 문장 관리(수정) 탭 열기
+            attachCardMenuTrigger(card, () => openEditModal(word));
 
-            card.querySelector(`#audio-${word.id}`).addEventListener('click', (e) => { e.stopPropagation(); speak(word.english); });
-            card.querySelector(`#menu-${word.id}`).addEventListener('click', (e) => { e.stopPropagation(); openEditModal(word); });
+            if(linksToShow.length > 0) {
+                linksToShow.forEach(link => {
+                    const linkEnEl = card.querySelector(`#link-en-${word.id}-${link.createdAt}`);
+                    if(linkEnEl) linkEnEl.addEventListener('click', (e) => { e.stopPropagation(); speak(link.english); });
 
-            if(word.links && word.links.length > 0) {
-                word.links.forEach(link => {
-                    const btn = card.querySelector(`#link-audio-${word.id}-${link.createdAt}`);
-                    if(btn) btn.addEventListener('click', (e) => { e.stopPropagation(); speak(link.english); });
-
-                    const menuBtn = card.querySelector(`#link-menu-${word.id}-${link.createdAt}`);
-                    if(menuBtn) menuBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        document.getElementById('link-edit-parent-id').value = word.id;
-                        document.getElementById('link-edit-created-at').value = link.createdAt;
-                        document.getElementById('link-edit-korean').value = link.korean;
-                        document.getElementById('link-edit-english').value = link.english;
-                        document.getElementById('link-edit-modal').style.display = 'flex';
-                    });
+                    const linkRowEl = card.querySelector(`#link-item-${word.id}-${link.createdAt}`);
+                    if(linkRowEl) attachCardMenuTrigger(linkRowEl, () => openLinkEditModal(word.id, link.createdAt));
                 });
             }
 
+            const addLinkBtn = card.querySelector(`#add-link-${word.id}`);
             addLinkBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 document.getElementById('link-parent-id').value = word.id;
@@ -1281,6 +1303,85 @@
             });
         });
     }
+
+    // ── 카드 롱프레스(모바일)/우클릭(노트북) 공용 트리거 ──
+    // 짧게 탭/클릭하면 아무 일도 없고, 일정 시간 이상 누르고 있거나 우클릭하면 콜백 실행
+    function attachCardMenuTrigger(el, openFn) {
+        let pressTimer = null;
+        let longPressFired = false;
+
+        el.addEventListener('touchstart', (e) => {
+            e.stopPropagation();
+            longPressFired = false;
+            pressTimer = setTimeout(() => {
+                longPressFired = true;
+                openFn();
+            }, 500);
+        }, { passive: true });
+
+        el.addEventListener('touchend', (e) => {
+            clearTimeout(pressTimer);
+            if(longPressFired) e.preventDefault();
+        }, { passive: false });
+
+        el.addEventListener('touchmove', () => clearTimeout(pressTimer), { passive: true });
+
+        el.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openFn();
+        });
+    }
+
+    // ── 문장 수정 모달 - 즐겨찾기 토글 버튼 ──
+    function updateEditStarBtn(isStarred) {
+        const btn = document.getElementById('edit-star-btn');
+        btn.className = isStarred ? 'fa-solid fa-star' : 'fa-regular fa-star';
+        btn.style.color = isStarred ? '#ffca28' : 'var(--text-sub)';
+    }
+
+    document.getElementById('edit-star-btn').addEventListener('click', () => {
+        const id = document.getElementById('edit-word-id').value;
+        const word = allWords.find(w => w.id === id);
+        if(!word) return;
+        word.starred = !word.starred;
+        saveData();
+        refreshFromStorage();
+        updateEditStarBtn(word.starred === true);
+    });
+
+    // ── 연결 문장 수정 모달 - 즐겨찾기 토글 버튼 ──
+    function updateLinkEditStarBtn(isStarred) {
+        const btn = document.getElementById('link-edit-star-btn');
+        btn.className = isStarred ? 'fa-solid fa-star' : 'fa-regular fa-star';
+        btn.style.color = isStarred ? '#ffca28' : 'var(--text-sub)';
+    }
+
+    function openLinkEditModal(wordId, linkCreatedAt) {
+        const word = allWords.find(w => w.id === wordId);
+        if(!word) return;
+        const link = (word.links || []).find(l => l.createdAt === linkCreatedAt);
+        if(!link) return;
+        document.getElementById('link-edit-parent-id').value = wordId;
+        document.getElementById('link-edit-created-at').value = linkCreatedAt;
+        document.getElementById('link-edit-korean').value = link.korean;
+        document.getElementById('link-edit-english').value = link.english;
+        updateLinkEditStarBtn(link.starred === true);
+        document.getElementById('link-edit-modal').style.display = 'flex';
+    }
+
+    document.getElementById('link-edit-star-btn').addEventListener('click', () => {
+        const wordId = document.getElementById('link-edit-parent-id').value;
+        const createdAt = parseInt(document.getElementById('link-edit-created-at').value);
+        const word = allWords.find(w => w.id === wordId);
+        if(!word) return;
+        const link = (word.links || []).find(l => l.createdAt === createdAt);
+        if(!link) return;
+        link.starred = !link.starred;
+        saveData();
+        refreshFromStorage();
+        updateLinkEditStarBtn(link.starred === true);
+    });
 
     // 카테고리 <select> 옵션 채우기 (새 문장 추가 / 문장 수정 모달)
     function populateCategorySelects() {
@@ -1302,6 +1403,7 @@
         document.getElementById('edit-english').value = word.english;
         populateCategorySelects();
         document.getElementById('edit-category').value = word.categoryId || (allCategories[0] ? allCategories[0].id : '');
+        updateEditStarBtn(word.starred === true);
         editModal.style.display = 'flex';
     }
 
@@ -1360,7 +1462,7 @@
         const parentWord = allWords.find(w => w.id === parentId);
         if(!parentWord) return;
         if(!parentWord.links) parentWord.links = [];
-        parentWord.links.push({ korean: lKorean, english: lEnglish, createdAt: new Date().getTime(), inFlashcard: true });
+        parentWord.links.push({ korean: lKorean, english: lEnglish, createdAt: new Date().getTime(), inFlashcard: true, starred: false });
         saveData();
         refreshFromStorage();
         linkModal.style.display = 'none';
@@ -1438,7 +1540,7 @@
     // 현재 선택된 스코프(전체/오늘/즐겨찾기)에 해당하는 원본 문장 목록 (최신순, 카테고리 무관)
     function getScopeWords(value) {
         if(value === 'star') {
-            return allWords.filter(w => w.starred === true).sort(byNewest);
+            return allWords.filter(w => w.starred === true || (w.links && w.links.some(l => l.starred === true))).sort(byNewest);
         }
         if(value === 'today') {
             const todayStr = new Date().toDateString();
@@ -1466,20 +1568,14 @@
 
     function resetFcMode() {
         fcMode = { type: 'scope', value: 'all' };
-        document.querySelectorAll('#fc-scope-dropdown .fc-dropdown-item').forEach(item => {
-            item.classList.toggle('active', item.getAttribute('data-scope') === 'all');
-        });
         updateFcModeLabel();
-    }
-
-    function closeAllFcDropdowns() {
-        document.getElementById('fc-scope-dropdown').classList.remove('show');
     }
 
     // 현재 모드에 맞는 플래시카드 풀 구성. forceShuffle이 true면 무작위로 섞음 (셔플 버튼용)
     function buildPoolForCurrentSelection(forceShuffle) {
         const baseWords = getWordsForFcMode();
-        let pool = buildFlashcardPool(baseWords);
+        const starFilterMode = (fcMode.type === 'scope' && fcMode.value === 'star');
+        let pool = buildFlashcardPool(baseWords, starFilterMode);
 
         if(forceShuffle) {
             // Fisher-Yates 셔플
@@ -1496,58 +1592,38 @@
         flashcardPool = pool;
         currentFlashIndex = 0;
         isCardRevealed = false;
+        flashcardResults = {};
         showFlashcard();
     }
 
-    // 스코프 버튼(원형) 클릭 → 전체/오늘/즐겨찾기 드롭다운 토글
-    document.getElementById('fc-btn-scope').addEventListener('click', (e) => {
-        e.stopPropagation();
-        const menu = document.getElementById('fc-scope-dropdown');
-        const wasOpen = menu.classList.contains('show');
-        closeAllFcDropdowns();
-        if(!wasOpen) menu.classList.add('show');
-    });
-
-    // 스코프 드롭다운 항목 선택 (전체/오늘/즐겨찾기) - 카테고리 상관없이 전체 문장 대상
-    document.querySelectorAll('#fc-scope-dropdown .fc-dropdown-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const scope = item.getAttribute('data-scope');
-
-            if(scope === 'today') {
-                const todayWords = getScopeWords('today');
-                if(todayWords.length === 0) {
-                    showInlineToast('📅', '오늘 추가한 문장이 없습니다!');
-                    closeAllFcDropdowns();
-                    return;
-                }
-            } else if(scope === 'star') {
-                const starredWords = getScopeWords('star');
-                if(starredWords.length === 0) {
-                    showInlineToast('⭐', '즐겨찾기한 문장이 없습니다!');
-                    closeAllFcDropdowns();
-                    return;
-                }
-            }
-
-            fcMode = { type: 'scope', value: scope };
-            document.querySelectorAll('#fc-scope-dropdown .fc-dropdown-item').forEach(it => it.classList.toggle('active', it === item));
-            updateFcModeLabel();
-            closeAllFcDropdowns();
-            loadFlashcardPool(buildPoolForCurrentSelection(false));
-        });
-    });
-
-    // 카테고리 버튼 클릭 → 중앙 팝업으로 카테고리 목록 표시
+    // 카테고리 버튼 클릭 → 중앙 팝업으로 카테고리 목록 표시 (맨 윗줄에 전체/즐겨찾기 포함)
     document.getElementById('fc-btn-category').addEventListener('click', (e) => {
         e.stopPropagation();
-        closeAllFcDropdowns();
         openFcCategoryModal();
     });
 
     function openFcCategoryModal() {
         const listEl = document.getElementById('fc-category-list');
         listEl.innerHTML = '';
+
+        // 맨 윗줄: 즐겨찾기
+        const starWords = getScopeWords('star');
+        const starItem = document.createElement('div');
+        starItem.className = 'fc-category-item' + (fcMode.type === 'scope' && fcMode.value === 'star' ? ' active' : '');
+        const starCardCount = starWords.reduce((sum, w) => sum + (w.starred ? 1 : 0) + (w.links ? w.links.filter(l => l.starred).length : 0), 0);
+        starItem.innerHTML = `<span>즐겨찾기</span><span class="fc-category-item-count">${starCardCount}</span>`;
+        starItem.addEventListener('click', () => {
+            if(starWords.length === 0) {
+                showInlineToast('⭐', '즐겨찾기한 문장이 없습니다!');
+                return;
+            }
+            fcMode = { type: 'scope', value: 'star' };
+            updateFcModeLabel();
+            document.getElementById('fc-category-modal').style.display = 'none';
+            loadFlashcardPool(buildPoolForCurrentSelection(false));
+        });
+        listEl.appendChild(starItem);
+
         getCategoriesOrdered().forEach(cat => {
             const words = allWords.filter(w => w.categoryId === cat.id);
             const item = document.createElement('div');
@@ -1571,14 +1647,17 @@
         document.getElementById('fc-category-modal').style.display = 'none';
     });
 
-    function buildFlashcardPool(sourceArray) {
+    function buildFlashcardPool(sourceArray, starFilterMode) {
         const pool = [];
         sourceArray.forEach(word => {
-            pool.push({ id: word.id, korean: word.korean, english: word.english, starred: word.starred });
+            if(!starFilterMode || word.starred === true) {
+                pool.push({ id: word.id, korean: word.korean, english: word.english, starred: word.starred });
+            }
             if(word.links && word.links.length > 0) {
                 word.links.forEach(link => {
                     if(link.inFlashcard === false) return;
-                    pool.push({ id: word.id + '_link_' + link.createdAt, korean: link.korean, english: link.english, starred: word.starred, isLink: true });
+                    if(starFilterMode && link.starred !== true) return;
+                    pool.push({ id: word.id + '_link_' + link.createdAt, korean: link.korean, english: link.english, starred: link.starred, isLink: true });
                 });
             }
         });
@@ -1616,6 +1695,72 @@
 
     document.getElementById('fc-btn-audio').addEventListener('click', (e) => { e.stopPropagation(); if(flashcardPool[currentFlashIndex]) speak(flashcardPool[currentFlashIndex].english); });
 
+    // 스와이프/방향키 채점 시 카드 위에 잠깐 체크/X 아이콘을 보여주는 시각 피드백
+    function flashSwipeIndicator(status) {
+        const el = document.getElementById('fc-swipe-indicator');
+        if(!el) return;
+        const icon = el.querySelector('i');
+        if(status === 'known') {
+            el.className = 'fc-swipe-indicator right';
+            icon.className = 'fa-solid fa-check';
+        } else {
+            el.className = 'fc-swipe-indicator left';
+            icon.className = 'fa-solid fa-xmark';
+        }
+        el.style.opacity = '1';
+        clearTimeout(el._hideTimer);
+        el._hideTimer = setTimeout(() => { el.style.opacity = '0'; }, 220);
+    }
+
+    // 현재 카드의 암기 여부를 기록하고 다음 카드로 이동 (스와이프/방향키에서 호출). 마지막 카드면 결과창 표시
+    function markCurrentCard(status, btnId) {
+        if(flashcardPool.length === 0 || currentFlashIndex >= flashcardPool.length) return;
+        if(btnId) triggerBtnFlash(btnId);
+        flashSwipeIndicator(status);
+        const currentCard = flashcardPool[currentFlashIndex];
+        flashcardResults[currentCard.id] = status;
+
+        if(currentFlashIndex < flashcardPool.length - 1) {
+            currentFlashIndex++;
+            isCardRevealed = false;
+            showFlashcard();
+        } else {
+            showFcResultModal();
+        }
+    }
+
+    // 학습 완료 결과창: 처음부터 다시 / X 한 문장만 다시 선택 가능
+    function showFcResultModal() {
+        const total = flashcardPool.length;
+        const knownCount = Object.values(flashcardResults).filter(v => v === 'known').length;
+        const unknownCount = Object.values(flashcardResults).filter(v => v === 'unknown').length;
+
+        document.getElementById('fc-result-score').innerText = `${knownCount} / ${total}`;
+        document.getElementById('fc-result-detail').innerText = `체크 ${knownCount}개 · X ${unknownCount}개`;
+
+        const retryBtn = document.getElementById('btn-fc-result-retry-wrong');
+        retryBtn.style.display = unknownCount > 0 ? 'block' : 'none';
+
+        document.getElementById('fc-result-modal').style.display = 'flex';
+    }
+
+    document.getElementById('btn-fc-result-restart-all').addEventListener('click', () => {
+        document.getElementById('fc-result-modal').style.display = 'none';
+        loadFlashcardPool(buildPoolForCurrentSelection(false));
+    });
+
+    document.getElementById('btn-fc-result-retry-wrong').addEventListener('click', () => {
+        const wrongIds = new Set(Object.keys(flashcardResults).filter(id => flashcardResults[id] === 'unknown'));
+        const retryPool = flashcardPool.filter(card => wrongIds.has(card.id));
+        document.getElementById('fc-result-modal').style.display = 'none';
+        if(retryPool.length === 0) return;
+        loadFlashcardPool(retryPool);
+    });
+
+    document.getElementById('close-fc-result-modal').addEventListener('click', () => {
+        document.getElementById('fc-result-modal').style.display = 'none';
+    });
+
     // 랜덤 버튼 전용 일시적 플래시 효과
     function triggerBtnFlash(btnId) {
         const btn = document.getElementById(btnId);
@@ -1629,7 +1774,6 @@
     // [셔플] 버튼: 전체 문장(스코프) 선택 상태면 전체를 셔플, 카테고리 선택 상태면 그 카테고리만 셔플
     document.getElementById('fc-btn-shuffle').addEventListener('click', (e) => {
         e.stopPropagation();
-        closeAllFcDropdowns();
         triggerBtnFlash('fc-btn-shuffle');
 
         const baseWords = getWordsForFcMode();
@@ -1643,18 +1787,10 @@
         if(!document.getElementById('tab-flashcard').classList.contains('active')) return;
         if(flashcardPool.length === 0) return;
 
-        if(e.key === 'ArrowLeft') {
-            if(currentFlashIndex > 0) {
-                currentFlashIndex--;
-                isCardRevealed = false;
-                showFlashcard();
-            }
-        } else if(e.key === 'ArrowRight') {
-            if(currentFlashIndex < flashcardPool.length - 1) {
-                currentFlashIndex++;
-                isCardRevealed = false;
-                showFlashcard();
-            }
+        if(e.key === 'ArrowRight') {
+            markCurrentCard('known');
+        } else if(e.key === 'ArrowLeft') {
+            markCurrentCard('unknown');
         } else if(e.key === ' ' || e.code === 'Space') {
             e.preventDefault(); 
             isCardRevealed = !isCardRevealed;
@@ -1696,18 +1832,10 @@
         const swipedLeft = touchStartX - touchEndX > threshold;
         const swipedRight = touchEndX - touchStartX > threshold;
 
-        if (swipedLeft) {
-            if (currentFlashIndex < flashcardPool.length - 1) {
-                currentFlashIndex++;
-                isCardRevealed = false;
-                showFlashcard();
-            }
-        } else if (swipedRight) {
-            if (currentFlashIndex > 0) {
-                currentFlashIndex--;
-                isCardRevealed = false;
-                showFlashcard();
-            }
+        if (swipedRight) {
+            markCurrentCard('known');
+        } else if (swipedLeft) {
+            markCurrentCard('unknown');
         }
     }
 
