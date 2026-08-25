@@ -10,6 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
 
+    <!-- 엑셀(.xlsx) 내보내기용 ExcelJS (테두리/배경색 등 셀 스타일링 지원) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+
     <!-- Firebase SDK -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -501,16 +504,11 @@
         </div>
 
         <div class="settings-section">
-            <h3>데이터 동기화 관리</h3>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-weight: 700; font-size: 15px; color: var(--text-main); margin-bottom: 4px;">클라우드 데이터베이스 상태</div>
-                    <div style="font-size: 12px; color: var(--text-sub);">Firebase Firestore 실시간 연결됨</div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 6px; color: #34C759; font-weight: bold; font-size: 14px;">
-                    <i class="fa-solid fa-circle-check" style="font-size: 18px;"></i>
-                    <span>정상</span>
-                </div>
+            <h3>내보내기</h3>
+            <select id="export-category-select" style="width:100%; padding:12px 14px; border-radius:12px; background:#f7f6f3; border:none; font-size:14px; font-weight:600; color:var(--text-main); outline:none; margin-bottom:14px;"></select>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-cancel" id="btn-export-excel" style="flex:1;"><i class="fa-solid fa-file-excel" style="margin-right:6px;"></i>Excel</button>
+                <button class="btn btn-submit" id="btn-export-pdf" style="flex:1;"><i class="fa-solid fa-file-pdf" style="margin-right:6px;"></i>PDF</button>
             </div>
         </div>
     </div>
@@ -1103,6 +1101,7 @@
         updateDashboardCounts();
         renderCategoryManageList();
         populateCategorySelects();
+        populateExportCategorySelect();
     }
 
     // ── 홈 화면 렌더링 ──
@@ -1122,7 +1121,11 @@
             flatContainer.style.display = 'block';
             const filtered = allWords.filter(w =>
                 w.korean.toLowerCase().includes(searchVal) ||
-                w.english.toLowerCase().includes(searchVal)
+                w.english.toLowerCase().includes(searchVal) ||
+                (w.links || []).some(l =>
+                    l.korean.toLowerCase().includes(searchVal) ||
+                    l.english.toLowerCase().includes(searchVal)
+                )
             ).sort(byNewest);
             renderWordList(filtered, flatContainer, false, false, searchValRaw);
             return;
@@ -1396,6 +1399,237 @@
         if(cats.some(c => c.id === prevInputVal)) inputSel.value = prevInputVal;
         if(cats.some(c => c.id === prevEditVal)) editSel.value = prevEditVal;
     }
+
+    // ── 설정 탭: 내보내기(Excel / PDF) ──
+
+    // 내보내기 카테고리 <select> 옵션 채우기 ('전체 카테고리' + 개별 카테고리)
+    function populateExportCategorySelect() {
+        const sel = document.getElementById('export-category-select');
+        if(!sel) return;
+        const cats = getCategoriesOrdered();
+        const prevVal = sel.value;
+        sel.innerHTML = '<option value="all">전체 카테고리</option>'
+            + cats.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+        if(prevVal === 'all' || cats.some(c => c.id === prevVal)) sel.value = prevVal;
+    }
+
+    // 선택된 카테고리 기준으로 내보낼 문장 목록을 [{korean, english}] 형태로 평탄화
+    // (본문장 + 연관문장을 등록 순서대로 모두 포함)
+    function getExportSentences(categoryId) {
+        const src = categoryId === 'all' ? allWords : allWords.filter(w => w.categoryId === categoryId);
+        const sorted = src.slice().sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        const rows = [];
+        sorted.forEach(w => {
+            rows.push({ korean: w.korean, english: w.english });
+            (w.links || []).slice().sort((a, b) => a.createdAt - b.createdAt).forEach(l => {
+                rows.push({ korean: l.korean, english: l.english });
+            });
+        });
+        return rows;
+    }
+
+    function exportFileDateStamp() {
+        const d = new Date();
+        return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function getSelectedExportLabel() {
+        const categoryId = document.getElementById('export-category-select').value;
+        return categoryId === 'all' ? '전체' : getCategoryName(categoryId);
+    }
+
+    // Excel(.xlsx) 내보내기: PDF 학습지와 비슷한 느낌으로 제목행 + 헤더행 + 테두리 있는 표를 만들어 다운로드
+    // 시트 1: 한국어+영어 모두 채워진 정답 시트 / 시트 2: 한국어만 있고 영어 칸이 빈 연습 시트
+    const EXCEL_GRID_BORDER = {
+        top: { style: 'thin', color: { argb: 'FF333333' } },
+        left: { style: 'thin', color: { argb: 'FF333333' } },
+        bottom: { style: 'thin', color: { argb: 'FF333333' } },
+        right: { style: 'thin', color: { argb: 'FF333333' } }
+    };
+
+    // 워크북에 한 개의 정답/연습 시트를 만들어 채워 넣음 (withEnglish=false면 영어 칸을 비움)
+    function buildExcelSheet(wb, sheetName, rows, label, withEnglish) {
+        const ws = wb.addWorksheet(sheetName.slice(0, 31), {
+            views: [{ state: 'frozen', ySplit: 2 }],
+            pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 }
+        });
+        ws.columns = [{ width: 48 }, { width: 48 }];
+
+        // 제목 행 (PDF의 페이지 제목과 동일한 문구)
+        ws.mergeCells('A1:B1');
+        const titleRow = ws.getRow(1);
+        titleRow.height = 28;
+        ['A1', 'B1'].forEach(addr => {
+            const cell = ws.getCell(addr);
+            cell.border = { bottom: { style: 'medium', color: { argb: 'FF1C1C1E' } } };
+        });
+        const titleCell = ws.getCell('A1');
+        titleCell.value = `영어 학습 노트 / ${label}`;
+        titleCell.font = { name: 'Pretendard', size: 14, bold: true, color: { argb: 'FF1C1C1E' } };
+        titleCell.alignment = { vertical: 'middle', horizontal: 'left' };
+
+        // 헤더 행 (한국어 / 영어)
+        const headerRow = ws.addRow(['한국어', '영어']);
+        headerRow.height = 20;
+        headerRow.eachCell(cell => {
+            cell.font = { name: 'Pretendard', bold: true, size: 11, color: { argb: 'FF1C1C1E' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2F1EE' } };
+            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+            cell.border = EXCEL_GRID_BORDER;
+        });
+
+        // 문장 행
+        rows.forEach(r => {
+            const row = ws.addRow([r.korean, withEnglish ? r.english : '']);
+            row.height = 26;
+            row.eachCell((cell, colNumber) => {
+                cell.font = colNumber === 1
+                    ? { name: 'Pretendard', size: 11, bold: true, color: { argb: 'FF1C1C1E' } }
+                    : { name: 'IBM Plex Sans', size: 11, color: { argb: 'FF1C1C1E' } };
+                cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+                cell.border = EXCEL_GRID_BORDER;
+            });
+        });
+
+        return ws;
+    }
+
+    async function exportToExcel() {
+        const categoryId = document.getElementById('export-category-select').value;
+        const rows = getExportSentences(categoryId);
+        if(rows.length === 0) { showInlineToast('⚠️', '내보낼 문장이 없어요'); return; }
+        if(typeof ExcelJS === 'undefined') { alert('엑셀 내보내기 기능을 불러오지 못했어요. 인터넷 연결을 확인한 뒤 다시 시도해주세요.'); return; }
+
+        const label = getSelectedExportLabel();
+        const wb = new ExcelJS.Workbook();
+        buildExcelSheet(wb, '정답', rows, label, true);
+        buildExcelSheet(wb, '연습', rows, label, false);
+
+        const buffer = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `enclip_${label}_${exportFileDateStamp()}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showInlineToast('📊', '엑셀 파일을 내보냈어요');
+    }
+
+    // PDF 학습지 한 페이지 분량의 행(row) HTML 생성. withEnglish=false면 영어 칸을 비워서 연습용으로 만듦
+    function buildPdfRowsHtml(chunk, withEnglish) {
+        return chunk.map(r => `
+            <div class="pdf-row">
+                <div class="pdf-cell pdf-cell-kr">${escapeHtml(r.korean)}</div>
+                <div class="pdf-cell pdf-cell-en${withEnglish ? '' : ' blank'}">${withEnglish ? escapeHtml(r.english) : ''}</div>
+            </div>`).join('');
+    }
+
+    function buildPdfPageHtml(chunk, withEnglish, catLabel, pageNum, totalPages) {
+        return `
+            <div class="pdf-page">
+                <div class="pdf-page-header">
+                    <div class="pdf-page-title">영어 학습 노트 / ${escapeHtml(catLabel)}</div>
+                    <div class="pdf-page-sub">${pageNum} / ${totalPages}</div>
+                </div>
+                <div class="pdf-grid">
+                    <div class="pdf-row pdf-head-row">
+                        <div class="pdf-cell pdf-cell-kr">한국어</div>
+                        <div class="pdf-cell pdf-cell-en">영어</div>
+                    </div>
+                    <div class="pdf-body">
+                        ${buildPdfRowsHtml(chunk, withEnglish)}
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    // 배열을 size개씩 잘라 페이지 단위 청크로 분리
+    function chunkArray(arr, size) {
+        const out = [];
+        for(let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+        return out;
+    }
+
+    const PDF_ROWS_PER_PAGE = 16;
+
+    // 인쇄용 A4 학습지 전체 HTML 문서 생성
+    // 1부: 한국어+영어가 모두 채워진 정답 페이지 → 2부: 한국어만 있고 영어 칸이 빈 연습 페이지가 이어짐
+    function buildPdfDocumentHtml(rows, catLabel) {
+        const chunks = chunkArray(rows, PDF_ROWS_PER_PAGE);
+        const totalPages = chunks.length * 2;
+        let pageNum = 0;
+        const answerPages = chunks.map(chunk => {
+            pageNum++;
+            return buildPdfPageHtml(chunk, true, catLabel, pageNum, totalPages);
+        }).join('');
+        const practicePages = chunks.map(chunk => {
+            pageNum++;
+            return buildPdfPageHtml(chunk, false, catLabel, pageNum, totalPages);
+        }).join('');
+
+        return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>enclip 학습 노트 - ${escapeHtml(catLabel)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif; color: #1C1C1E; background: #fff; }
+    @page { size: A4; margin: 0; }
+    .pdf-page { width: 210mm; min-height: 297mm; padding: 16mm 14mm; page-break-after: always; display: flex; flex-direction: column; }
+    .pdf-page:last-child { page-break-after: auto; }
+    .pdf-page-header { margin-bottom: 6mm; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #1C1C1E; padding-bottom: 3mm; }
+    .pdf-page-title { font-size: 13px; font-weight: 700; }
+    .pdf-page-sub { font-size: 11px; color: #666; white-space: nowrap; }
+    .pdf-grid { display: block; border: 1px solid #333; }
+    .pdf-body { display: block; }
+    .pdf-row { display: flex; border-bottom: 1px solid #333; min-height: 14.5mm; }
+    .pdf-head-row { background: #f2f1ee; font-weight: 700; font-size: 11px; min-height: 0; }
+    .pdf-cell { flex: 1; padding: 3mm 4mm; display: flex; align-items: center; font-size: 12.5px; line-height: 1.5; word-break: keep-all; overflow-wrap: break-word; }
+    .pdf-cell-kr { border-right: 1px solid #333; font-weight: 600; }
+    .pdf-cell-en { font-family: "IBM Plex Sans", sans-serif; font-weight: 400; }
+    @media screen {
+        body { background: #888; padding: 10mm 0; }
+        .pdf-page { margin: 0 auto 10mm; box-shadow: 0 0 12px rgba(0,0,0,0.25); background: #fff; }
+    }
+</style>
+</head>
+<body>
+${answerPages}
+${practicePages}
+<script>
+    function triggerPrint() { setTimeout(function(){ window.print(); }, 250); }
+    if (document.fonts && document.fonts.ready) { document.fonts.ready.then(triggerPrint); }
+    else { triggerPrint(); }
+<\/script>
+</body>
+</html>`;
+    }
+
+    // PDF 내보내기: 인쇄 전용 창을 열어 브라우저의 '인쇄 > PDF로 저장'으로 A4 학습지를 만들 수 있게 함
+    function exportToPdf() {
+        const categoryId = document.getElementById('export-category-select').value;
+        const rows = getExportSentences(categoryId);
+        if(rows.length === 0) { showInlineToast('⚠️', '내보낼 문장이 없어요'); return; }
+
+        const catLabel = getSelectedExportLabel();
+        const html = buildPdfDocumentHtml(rows, catLabel);
+        const printWin = window.open('', '_blank');
+        if(!printWin) { alert('팝업이 차단되어 PDF 학습지를 열 수 없어요. 브라우저에서 팝업 허용 후 다시 시도해주세요.'); return; }
+        printWin.document.open();
+        printWin.document.write(html);
+        printWin.document.close();
+    }
+
+    document.getElementById('btn-export-excel').addEventListener('click', exportToExcel);
+    document.getElementById('btn-export-pdf').addEventListener('click', exportToPdf);
 
     function openEditModal(word) {
         document.getElementById('edit-word-id').value = word.id;
