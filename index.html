@@ -63,7 +63,7 @@
         --text-main: #1C1C1E; /* iOS System Dark Text */
         --text-sub: #8E8E93;  /* iOS System Gray */
         --app-font: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        --english-font: "IBM Plex Sans", sans-serif;
+        --english-font: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--app-font); -webkit-tap-highlight-color: transparent; }
         body { background-color: #EFEFEA; color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; }
@@ -138,21 +138,21 @@
         .search-box i { position: absolute; left: 2px; top: 3px; color: var(--text-sub); font-size: 13px; }
 
         /* 문장 리스트 - 노션 스타일 (박스 없이 여백/구분선으로만 구분) */
-        #word-list-container { border-top: 1px solid #eeece9; }
+        #word-list-container { border-top: none; }
         .sentence-row { padding: 16px 4px; border-bottom: 1px solid #eeece9; }
         .sentence-row:last-child { border-bottom: none; }
         .sentence-main { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
         .sentence-text-wrap { flex: 1; min-width: 0; }
         .sentence-kr-row { display: flex; align-items: baseline; gap: 6px; }
         .sentence-kr { font-size: 16px; font-weight: 600; color: var(--text-main); line-height: 1.6; word-break: keep-all; }
-        .sentence-en { font-size: 14px; font-weight: 400; color: var(--text-main); line-height: 1.6; margin-top: 3px; font-family: var(--english-font) !important; cursor: pointer; }
-        .sentence-star { font-size: 11px; color: #e0a132; flex-shrink: 0; }
+        .sentence-en { font-size: 14px; font-weight: 400; color: var(--text-main); line-height: 1.6; margin-top: 3px; font-family: var(--app-font) !important; cursor: pointer; }
+        .sentence-star { font-size: 16px; font-weight: 700; line-height: 1; color: var(--primary-color); flex-shrink: 0; }
         .sentence-actions { display: flex; gap: 6px; flex-shrink: 0; margin-top: 1px; color: #c4c3bf; font-size: 13px; }
         .sentence-actions i { cursor: pointer; transition: color 0.15s; padding: 6px; }
         .sentence-actions i:hover { color: var(--primary-color); }
 
-        .link-list { margin-top: 12px; display: flex; flex-direction: column; gap: 12px; }
-        .link-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding-left: 14px; border-left: 2px solid #eeece9; }
+        .link-list { margin-top: 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+        .link-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; max-width: 92%; padding: 10px 14px; background: #f4f3ef; border-radius: 4px 16px 16px 16px; }
 
         /* 검색 결과에서 일치하는 부분 하이라이트 */
         mark.search-highlight { background: #fdecc8; color: inherit; border-radius: 2px; padding: 0 1px; }
@@ -390,6 +390,32 @@
 
         /* 플래시카드 상단 현재 모드 라벨 */
         .fc-mode-label { font-size: 12px; font-weight: 700; color: var(--primary-color); letter-spacing: 0.2px; margin-bottom: 2px; }
+
+        /* ── 노트 UI ── */
+        .topic-list{display:flex;flex-direction:column;gap:10px}
+        .topic-card{background:#fff;border:1px solid #eeece9;border-radius:12px;padding:14px 16px;cursor:pointer}
+        .topic-card:active{background:#f7f6f3}
+        .topic-top{display:flex;justify-content:space-between;align-items:center}
+        .topic-name{font-size:16px;font-weight:700}
+        .topic-count{font-size:12px;font-weight:700;color:var(--primary-color)}
+        .topic-prev{font-size:13px;color:var(--text-sub);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .topic-date{font-size:11px;color:#c4c3bf;margin-top:6px}
+        .note-back{background:none;border:none;color:var(--text-sub);font-size:14px;cursor:pointer;padding:4px 0;margin-bottom:10px}
+        .note-title{font-size:22px;font-weight:700}
+        .note-meta{font-size:12px;color:var(--text-sub);margin:4px 0 14px}
+        .note-paper{display:flex;flex-direction:column;gap:12px}
+        .note-paper .sentence-row{background:#fff;border:1px solid #eeece9;border-radius:10px;padding:14px;counter-reset:n;position:relative}
+        .note-paper .link-row::before{content:'';position:absolute;left:0;right:0;margin-top:-14px;height:1px;background:#f0eeea}
+        .note-paper .sentence-kr-row{display:flex;align-items:flex-start;counter-increment:n}
+        .note-paper .sentence-kr-row::before{content:counter(n);font-size:11px;font-weight:700;color:var(--primary-color);min-width:16px;padding-top:3px}
+        .note-paper .link-list{gap:14px;margin-top:14px}
+        .note-paper .link-row{background:none;border-radius:0;padding:14px 0 0;max-width:100%;width:100%}
+        .note-paper .link-row .sentence-text-wrap > .sentence-en{margin-left:22px}
+        .note-paper .sentence-main > .sentence-text-wrap > .sentence-en,
+        .note-paper .sentence-main > .sentence-text-wrap > .sentence-note{margin-left:22px}
+        .sentence-note{margin-top:12px;font-size:12.5px;color:var(--text-sub);white-space:pre-wrap;line-height:1.6}
+        #edit-note{width:100%;padding:10px;border:1px solid #eeece9;border-radius:8px;font-size:14px;resize:vertical}
+        #edit-modal .modal-content{max-height:90vh;overflow-y:auto}
     </style>
 </head>
 <body>
@@ -424,7 +450,7 @@
         </div>
 
         <div id="category-accordion-container"></div>
-        <div id="word-list-container"></div>
+        <div id="word-list-container" class="note-paper"></div>
     </div>
 
     <!-- 플래시카드 탭 (진행카운터 + 2단 카드 + 목록/셔플/개수 원형 버튼) -->
@@ -466,9 +492,9 @@
                 <div class="color-picker" style="flex-wrap: nowrap; justify-content: space-between; margin-bottom: 0;">
                     <div class="color-dot" style="background: #FF7F50;" data-color="#FF7F50"></div>
                     <div class="color-dot" style="background: #36C179;" data-color="#36C179"></div>
-                    <div class="color-dot" style="background: #D46A6A;" data-color="#D46A6A"></div>
-                    <div class="color-dot" style="background: #195A9C;" data-color="#195A9C"></div>
-                    <div class="color-dot" style="background: #7A619F;" data-color="#7A619F"></div>
+                    <div class="color-dot" style="background: #4A86D6;" data-color="#4A86D6"></div>
+                    <div class="color-dot" style="background: #3D5A80;" data-color="#3D5A80"></div>
+                    <div class="color-dot" style="background: #D4679B;" data-color="#D4679B"></div>
                 </div>
             </div>
         </div>
@@ -560,6 +586,10 @@
             <div class="form-group">
                 <label>영어 문장</label>
                 <input type="text" id="edit-english">
+            </div>
+            <div class="form-group">
+                <label>메모</label>
+                <textarea id="edit-note" rows="3"></textarea>
             </div>
             <div class="form-group">
                 <label>카테고리</label>
@@ -1112,13 +1142,16 @@
         setActiveChip();
         const searchValRaw = document.getElementById('search-input').value.trim();
         const searchVal = searchValRaw.toLowerCase();
+        const inNote = !!openNoteCatId && currentHomeMode === 'category' && !searchVal;
+        document.querySelector('.dashboard-grid').style.display = inNote ? 'none' : '';
+        document.querySelector('.search-box').style.display = inNote ? 'none' : '';
         const flatContainer = document.getElementById('word-list-container');
         const accordionContainer = document.getElementById('category-accordion-container');
 
         if(searchVal) {
             accordionContainer.style.display = 'none';
             accordionContainer.innerHTML = '';
-            flatContainer.style.display = 'block';
+            flatContainer.style.display = 'flex';
             const filtered = allWords.filter(w =>
                 w.korean.toLowerCase().includes(searchVal) ||
                 w.english.toLowerCase().includes(searchVal) ||
@@ -1135,13 +1168,13 @@
             flatContainer.style.display = 'none';
             flatContainer.innerHTML = '';
             accordionContainer.style.display = 'block';
-            renderCategoryAccordion();
+            if(openNoteCatId) renderNotePage(accordionContainer); else renderTopicHome(accordionContainer);
             return;
         }
 
         accordionContainer.style.display = 'none';
         accordionContainer.innerHTML = '';
-        flatContainer.style.display = 'block';
+        flatContainer.style.display = 'flex';
 
         let list;
         let starOnlyLinks = false;
@@ -1156,6 +1189,40 @@
         }
         list.sort(byNewest);
         renderWordList(list, flatContainer, false, starOnlyLinks);
+    }
+
+    // ── 노트 UI: 형광펜 / 주제 목록 / 노트 페이지 ──
+    let openNoteCatId = null;
+
+    function renderTopicHome(wrap) {
+        wrap.innerHTML = '';
+        const list = document.createElement('div');
+        list.className = 'topic-list';
+        getCategoriesOrdered().forEach(cat => {
+            const words = allWords.filter(w => w.categoryId === cat.id).sort(byNewest);
+            const card = document.createElement('div');
+            card.className = 'topic-card';
+            const last = words[0] ? parseDate(words[0].createdAt).toLocaleDateString('ko-KR') : '';
+            card.innerHTML = `
+                <div class="topic-top"><span class="topic-name">${escapeHtml(cat.name)}</span><span class="topic-count">${totalCardCount(words)}</span></div>
+                <div class="topic-date">${last}</div>`;
+            card.addEventListener('click', () => { openNoteCatId = cat.id; renderHome(); window.scrollTo(0, 0); });
+            list.appendChild(card);
+        });
+        wrap.appendChild(list);
+    }
+
+    function renderNotePage(wrap) {
+        const cat = allCategories.find(c => c.id === openNoteCatId);
+        if(!cat) { openNoteCatId = null; return renderTopicHome(wrap); }
+        const words = allWords.filter(w => w.categoryId === cat.id).sort(byNewest);
+        wrap.innerHTML = `
+            <button class="note-back" id="note-back"><i class="fa-solid fa-chevron-left"></i> 목록</button>
+            <h2 class="note-title">${escapeHtml(cat.name)}</h2>
+            <div class="note-meta">${totalCardCount(words)}문장</div>
+            <div class="note-paper" id="note-sentences"></div>`;
+        renderWordList(words, wrap.querySelector('#note-sentences'), true);
+        wrap.querySelector('#note-back').addEventListener('click', () => { openNoteCatId = null; renderHome(); });
     }
 
     // 카테고리별 아코디언(드롭다운) 렌더링
@@ -1252,10 +1319,10 @@
                         <div class="link-row" id="link-item-${word.id}-${link.createdAt}">
                             <div class="sentence-text-wrap">
                                 <div class="sentence-kr-row">
-                                    ${link.starred === true ? '<i class="fa-solid fa-star sentence-star" style="font-size:10px;"></i>' : ''}
-                                    <div class="sentence-kr" style="font-size:14px;">${linkKoreanHtml}</div>
+                                    <div class="sentence-kr">${linkKoreanHtml}</div>
+                                    ${link.starred === true ? '<span class="sentence-star">*</span>' : ''}
                                 </div>
-                                <div class="sentence-en" id="link-en-${word.id}-${link.createdAt}" style="font-size:13px;">${linkEnglishHtml}</div>
+                                <div class="sentence-en" id="link-en-${word.id}-${link.createdAt}">${linkEnglishHtml}</div>
                             </div>
                         </div>`;
                 });
@@ -1266,11 +1333,12 @@
                 <div class="sentence-main">
                     <div class="sentence-text-wrap">
                         <div class="sentence-kr-row">
-                            ${word.starred === true ? '<i class="fa-solid fa-star sentence-star"></i>' : ''}
                             <div class="sentence-kr">${wordKoreanHtml}</div>
+                            ${word.starred === true ? '<span class="sentence-star">*</span>' : ''}
                         </div>
                         <div class="sentence-en" id="en-box-${word.id}">${wordEnglishHtml}</div>
                         ${linksHtml}
+                        ${word.note ? `<div class="sentence-note">${escapeHtml(word.note)}</div>` : ''}
                     </div>
                     <div class="sentence-actions">
                         <i class="fa-solid fa-plus" id="add-link-${word.id}" title="연결문장 추가"></i>
@@ -1635,6 +1703,7 @@ ${practicePages}
         document.getElementById('edit-word-id').value = word.id;
         document.getElementById('edit-korean').value = word.korean;
         document.getElementById('edit-english').value = word.english;
+        document.getElementById('edit-note').value = word.note || '';
         populateCategorySelects();
         document.getElementById('edit-category').value = word.categoryId || (allCategories[0] ? allCategories[0].id : '');
         updateEditStarBtn(word.starred === true);
@@ -1648,7 +1717,7 @@ ${practicePages}
         const uCategory = document.getElementById('edit-category').value || (allCategories[0] ? allCategories[0].id : '');
         if(!uKorean || !uEnglish) return alert("내용을 채워주세요.");
         const target = allWords.find(w => w.id === id);
-        if(target) { target.korean = uKorean; target.english = uEnglish; target.categoryId = uCategory; saveData(); refreshFromStorage(); }
+        if(target) { target.korean = uKorean; target.english = uEnglish; target.categoryId = uCategory; target.note = document.getElementById('edit-note').value.trim(); saveData(); refreshFromStorage(); }
         editModal.style.display = 'none';
     });
 
