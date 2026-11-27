@@ -910,6 +910,7 @@
             if(tabId === 'tab-home') {
                 document.getElementById('search-input').value = '';
                 currentHomeMode = 'category';
+                openNoteCatId = null;
                 switchTab('tab-home');
                 renderHome();
             } else {
@@ -1183,7 +1184,14 @@
             const todayStr = new Date().toDateString();
             list = allWords.filter(w => w.createdAt && parseDate(w.createdAt).toDateString() === todayStr);
         } else if(currentHomeMode === 'star') {
-            list = allWords.filter(w => w.starred === true || (w.links && w.links.some(l => l.starred === true)));
+            // 즐겨찾기 탭: 별표한 문장만 (본문장/연결문장 각각 독립된 상자로)
+            list = [];
+            allWords.forEach(w => {
+                if(w.starred === true) list.push({ ...w, links: [], note: '' });
+                (w.links || []).forEach(l => {
+                    if(l.starred === true) list.push({ id: w.id, korean: l.korean, english: l.english, starred: true, links: [], createdAt: l.createdAt, _parent: w, _link: l });
+                });
+            });
             starOnlyLinks = true;
         } else {
             list = [...allWords];
@@ -1342,7 +1350,7 @@
                         ${word.note ? `<div class="sentence-note">${escapeHtml(word.note)}</div>` : ''}
                     </div>
                     <div class="sentence-actions">
-                        <i class="fa-solid fa-plus" id="add-link-${word.id}" title="연결문장 추가"></i>
+                        ${word._link ? '' : `<i class="fa-solid fa-plus" id="add-link-${word.id}" title="연결문장 추가"></i>`}
                     </div>
                 </div>
             `;
@@ -1353,7 +1361,7 @@
             card.querySelector(`#en-box-${word.id}`).addEventListener('click', (e) => { e.stopPropagation(); speak(word.english); });
 
             // 롱프레스(모바일) / 우클릭(노트북) → 문장 관리(수정) 탭 열기
-            attachCardMenuTrigger(card, () => openEditModal(word));
+            attachCardMenuTrigger(card, () => word._link ? openLinkEditModal(word._parent.id, word._link.createdAt) : openEditModal(word));
 
             if(linksToShow.length > 0) {
                 linksToShow.forEach(link => {
@@ -1366,7 +1374,7 @@
             }
 
             const addLinkBtn = card.querySelector(`#add-link-${word.id}`);
-            addLinkBtn.addEventListener('click', (e) => {
+            if(addLinkBtn) addLinkBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 document.getElementById('link-parent-id').value = word.id;
                 document.getElementById('link-korean').value = '';
@@ -1750,6 +1758,10 @@ ${practicePages}
         lastUsedCategoryId = categoryId;
         saveData();
         refreshFromStorage();
+        // 새 문장이 보이는 화면(해당 노트 / 전체)에서는 맨 아래로 스크롤
+        if(currentHomeMode === 'all' || (currentHomeMode === 'category' && openNoteCatId === categoryId)) {
+            setTimeout(() => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }), 80);
+        }
 
         document.getElementById('input-korean').value = '';
         document.getElementById('input-english').value = '';
@@ -1770,6 +1782,12 @@ ${practicePages}
         saveData();
         refreshFromStorage();
         linkModal.style.display = 'none';
+        // 연결문장을 추가한 상자의 아래쪽(새 연결문장 위치)으로 스크롤
+        setTimeout(() => {
+            const en = document.getElementById('en-box-' + parentId);
+            const box = en && en.closest('.sentence-row');
+            if(box) box.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }, 80);
     });
 
     // ── 설정 탭: 카테고리 관리 ──
